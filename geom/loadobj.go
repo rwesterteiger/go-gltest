@@ -1,6 +1,6 @@
 package geom
 import (
-	gl "github.com/chsc/gogl/gl43"
+	gl "github.com/rwesterteiger/gogl/gl32"
 	"log"
 	"github.com/rwesterteiger/go-gltest/buffers"
 	"strings"

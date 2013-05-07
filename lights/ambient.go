@@ -5,7 +5,7 @@ import (
 	"github.com/rwesterteiger/go-gltest/buffers"
 	"github.com/rwesterteiger/go-gltest/gbuffer"
 	vmath "github.com/rwesterteiger/vectormath"
-	gl "github.com/chsc/gogl/gl43"
+	gl "github.com/rwesterteiger/gogl/gl32"
 )
 
 const ambientLightVtxShaderSrc =`

@@ -1,7 +1,7 @@
 package post
 
 import (
-	gl "github.com/chsc/gogl/gl43"
+	gl "github.com/rwesterteiger/gogl/gl32"
 	"github.com/rwesterteiger/go-gltest/gbuffer"
 	"github.com/rwesterteiger/go-gltest/buffers"
 	vmath "github.com/rwesterteiger/vectormath"
