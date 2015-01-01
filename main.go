@@ -1,21 +1,21 @@
 package main
 
 import (
-	gl "github.com/rwesterteiger/gogl/gl32"
+	gl "github.com/chsc/gogl/gl43"
 	"github.com/jteeuwen/glfw"
 	//	"github.com/rwesterteiger/vectormath"
-	"fmt"
+	"log"
+	"github.com/rwesterteiger/go-gltest/shader"
 	"github.com/rwesterteiger/go-gltest/buffers"
 	"github.com/rwesterteiger/go-gltest/geom"
-	"github.com/rwesterteiger/go-gltest/shader"
 	vmath "github.com/rwesterteiger/vectormath"
-	"log"
 	"math"
+	"fmt"
 
+	"github.com/rwesterteiger/go-gltest/scene"
 	"github.com/rwesterteiger/go-gltest/lights"
 	"github.com/rwesterteiger/go-gltest/post"
-	"github.com/rwesterteiger/go-gltest/scene"
-	"time"
+	"time"	
 )
 
 const (
@@ -23,6 +23,8 @@ const (
 	Width  = 1024
 	Height = 768
 )
+
+
 
 const vertexShaderSource = `
 #version 430
@@ -37,6 +39,7 @@ void main(void) {
 }
 `
 
+
 const fragmentShaderSource = `
 #version 430
 layout (location = 0) out vec4 fragData;
@@ -49,10 +52,11 @@ void main(void)
 }
 `
 
-func makePlaneVAO() *buffers.VAO {
-	vtxs := buffers.MakeVBOFromVec3s([]vmath.Vector3{{-10, 0, 10}, {10, 0, 10}, {10, 0, -10}, {-10, 0, -10}})
-	normals := buffers.MakeVBOFromVec3s([]vmath.Vector3{{0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}})
-	indices := []uint32{0, 1, 2, 2, 3, 0}
+
+func makePlaneVAO() (*buffers.VAO) {
+	vtxs := buffers.MakeVBOFromVec3s([]vmath.Vector3{ {-10, 0, 10}, {10, 0, 10}, {10, 0, -10}, {-10, 0, -10 } })
+	normals := buffers.MakeVBOFromVec3s([]vmath.Vector3{ {0,1,0}, {0,1,0}, {0,1,0}, {0,1,0} })
+	indices := []uint32{ 0, 1, 2, 2, 3, 0 }
 
 	vao := buffers.MakeVAO(gl.TRIANGLES, 6)
 	vao.AttachVBO(0, vtxs)
@@ -61,9 +65,9 @@ func makePlaneVAO() *buffers.VAO {
 
 	return vao
 }
-
+	
 func makeQuadShader() (quadShader *shader.Shader) {
-	const quadVtxShaderSrc = `
+	const quadVtxShaderSrc =`
 	#version 430
 	layout (location = 0) in vec2 vtx;
 	layout (location = 1) in vec2 tc;
@@ -119,8 +123,8 @@ func makeQuadShader() (quadShader *shader.Shader) {
 	return
 }
 
-func makeAmbientBlitShader() *shader.Shader {
-	const vSrc = `
+func makeAmbientBlitShader() (*shader.Shader) {
+	const vSrc =`
 	#version 430
 	layout (location = 0) in vec2 vtx;
 	layout (location = 1) in vec2 tc;
@@ -155,10 +159,11 @@ func makeAmbientBlitShader() *shader.Shader {
 	return s
 }
 
-func makeFullscreenQuadVAO() *buffers.VAO {
-	vtxs := buffers.MakeVBOFromVec2s([]vmath.Vector2{{-1, -1}, {1, -1}, {1, 1}, {-1, 1}})
-	tcs := buffers.MakeVBOFromVec2s([]vmath.Vector2{{0, 0}, {1, 0}, {1, 1}, {0, 1}})
-	indices := []uint32{0, 1, 2, 2, 3, 0}
+
+func makeFullscreenQuadVAO() (*buffers.VAO) {
+	vtxs := buffers.MakeVBOFromVec2s([]vmath.Vector2{ {-1, -1}, {1, -1}, {1, 1}, {-1, 1} })
+	tcs := buffers.MakeVBOFromVec2s([]vmath.Vector2{ { 0,0 }, {1,0}, {1,1}, {0,1} })
+	indices := []uint32{ 0, 1, 2, 2, 3, 0 }
 
 	vao := buffers.MakeVAO(gl.TRIANGLES, 6)
 	vao.AttachVBO(0, vtxs)
@@ -168,10 +173,10 @@ func makeFullscreenQuadVAO() *buffers.VAO {
 	return vao
 }
 
-func makeQuadVAO() *buffers.VAO {
-	vtxs := buffers.MakeVBOFromVec2s([]vmath.Vector2{{-0.2, -0.98}, {0.98, -0.98}, {0.98, -0.6}, {-0.2, -0.6}})
-	tcs := buffers.MakeVBOFromVec2s([]vmath.Vector2{{0, 0}, {1, 0}, {1, 1}, {0, 1}})
-	indices := []uint32{0, 1, 2, 2, 3, 0}
+func makeQuadVAO() (*buffers.VAO) {
+	vtxs := buffers.MakeVBOFromVec2s([]vmath.Vector2{ { -0.2, -0.98}, {0.98, -0.98}, {0.98, -0.6}, {-0.2, -0.6} })
+	tcs := buffers.MakeVBOFromVec2s([]vmath.Vector2{ { 0,0 }, {1,0}, {1,1}, {0,1} })
+	indices := []uint32{ 0, 1, 2, 2, 3, 0 }
 
 	vao := buffers.MakeVAO(gl.TRIANGLES, 6)
 	vao.AttachVBO(0, vtxs)
@@ -180,7 +185,6 @@ func makeQuadVAO() *buffers.VAO {
 
 	return vao
 }
-
 /*
 func makeSceneRenderer() func(float32,  *vmath.Matrix4, *vmath.Matrix4) {
 	objVAO := geom.LoadOBJ("monkey.obj")
@@ -189,7 +193,7 @@ func makeSceneRenderer() func(float32,  *vmath.Matrix4, *vmath.Matrix4) {
 	var blenderToGLXForm vmath.Transform3
 	vmath.T3MakeFromCols(&blenderToGLXForm, &vmath.Vector3{1,0,0}, &vmath.Vector3{0,1,0}, &vmath.Vector3{0,0,1}, &vmath.Vector3{0,0,0})
 
-	return func(t float32, camProjectionMatrix *vmath.Matrix4, camViewMatrix *vmath.Matrix4) {
+	return func(t float32, camProjectionMatrix *vmath.Matrix4, camViewMatrix *vmath.Matrix4) {	
 
 		var objSpinRotation vmath.Transform3
 		vmath.T3MakeRotationY(&objSpinRotation, 0.0) // spin around
@@ -234,9 +238,9 @@ func main() {
 	}
 	defer glfw.Terminate()
 
-	glfw.OpenWindowHint(glfw.OpenGLVersionMajor, 3)
-	glfw.OpenWindowHint(glfw.OpenGLVersionMinor, 2)
-	// glfw.OpenWindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
+	glfw.OpenWindowHint(glfw.OpenGLVersionMajor, 4)
+	glfw.OpenWindowHint(glfw.OpenGLVersionMinor, 3)
+	glfw.OpenWindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile);
 	glfw.OpenWindowHint(glfw.WindowNoResize, 1)
 	glfw.SetSwapInterval(0)
 
@@ -245,14 +249,16 @@ func main() {
 	}
 	defer glfw.CloseWindow()
 
+
 	glfw.SetWindowTitle(Title)
 
 	if err := gl.Init(); err != nil {
 		log.Fatal(err)
 	}
-
+	
 	//quadShader := makeQuadShader()
 	//quadVAO := makeQuadVAO()
+
 
 	//ambientBlitShader := makeAmbientBlitShader()
 	//fsQuadVAO := makeFullscreenQuadVAO()
@@ -262,10 +268,12 @@ func main() {
 
 	var zNear float32 = 0.1
 	var zFar float32 = 100.0
-	scene.SetCameraPerspective(60.0/360.0*2*math.Pi, float32(Width)/float32(Height), zNear, zFar)
+	scene.SetCameraPerspective(60.0 / 360.0 * 2 * math.Pi, float32(Width) / float32(Height), zNear, zFar)
+
+
 
 	var blenderToGLXForm vmath.Transform3
-	vmath.T3MakeFromCols(&blenderToGLXForm, &vmath.Vector3{1, 0, 0}, &vmath.Vector3{0, 1, 0}, &vmath.Vector3{0, 0, 1}, &vmath.Vector3{0, 0, 0})
+	vmath.T3MakeFromCols(&blenderToGLXForm, &vmath.Vector3{1,0,0}, &vmath.Vector3{0,1,0}, &vmath.Vector3{0,0,1}, &vmath.Vector3{0,0,0})
 
 	var objTranslation vmath.Transform3
 	vmath.T3MakeTranslation(&objTranslation, &vmath.Vector3{0, 0.25, 0})
@@ -274,33 +282,35 @@ func main() {
 	vmath.M4MakeFromT3(&modelMatrixMonkey, &objTranslation)
 	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &blenderToGLXForm)
 
-	monkey := geom.LoadOBJ("monkey.obj", &vmath.Vector4{1, 1, 1, 1})
+
+	monkey := geom.LoadOBJ("monkey.obj", &vmath.Vector4{1,1,1,1})
 	monkey.SetModelMatrix(&modelMatrixMonkey)
 	scene.AddObject(monkey)
+
 
 	var monkeyArrayTrans vmath.Transform3
-	vmath.T3MakeTranslation(&monkeyArrayTrans, &vmath.Vector3{0, 0, -2})
+	vmath.T3MakeTranslation(&monkeyArrayTrans, &vmath.Vector3{0,0,-2})
 	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &monkeyArrayTrans)
 
-	monkey = geom.LoadOBJ("monkey.obj", &vmath.Vector4{1, 1, 1, 1})
+	monkey = geom.LoadOBJ("monkey.obj", &vmath.Vector4{1,1,1,1})
 	monkey.SetModelMatrix(&modelMatrixMonkey)
 	scene.AddObject(monkey)
 
-	vmath.T3MakeTranslation(&monkeyArrayTrans, &vmath.Vector3{0, 0, 2})
+	vmath.T3MakeTranslation(&monkeyArrayTrans, &vmath.Vector3{0,0,2})
 	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &monkeyArrayTrans)
 
 	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &monkeyArrayTrans)
-	monkey = geom.LoadOBJ("monkey.obj", &vmath.Vector4{1, 1, 1, 1})
+	monkey = geom.LoadOBJ("monkey.obj", &vmath.Vector4{1,1,1,1})
 	monkey.SetModelMatrix(&modelMatrixMonkey)
 	scene.AddObject(monkey)
 
-	scene.AddObject(geom.MakeObject(makePlaneVAO(), &vmath.Vector4{1, 1, 1, 1}))
+	scene.AddObject(geom.MakeObject(makePlaneVAO(), &vmath.Vector4{1,1,1,1}))
 
 	scene.AddLight(lights.MakeAmbientLight())
 
-	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 3, -2}, &vmath.Point3{0, 0, -2}, &vmath.Vector3{0, 0, -1}, 2, &vmath.Vector3{0.5, 0, 0}))
-	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 3, 0}, &vmath.Point3{0, 0, 0}, &vmath.Vector3{0, 0, -1}, 2, &vmath.Vector3{0, 0.5, 0}))
-	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 3, 2}, &vmath.Point3{0, 0, 2}, &vmath.Vector3{0, 0, -1}, 2, &vmath.Vector3{0, 0, 0.5}))
+	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 3,-2}, &vmath.Point3{0,0,-2}, &vmath.Vector3{0,0,-1}, 2, &vmath.Vector3{0.5,0,0}))
+	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 3, 0}, &vmath.Point3{0,0, 0}, &vmath.Vector3{0,0,-1}, 2, &vmath.Vector3{0,0.5,0}))
+	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 3, 2}, &vmath.Point3{0,0, 2}, &vmath.Vector3{0,0,-1}, 2, &vmath.Vector3{0,0,0.5}))
 
 	//scene.AddLight(lights.MakeSpotLight(&vmath.Point3{2, 2, 2}, &vmath.Point3{0,0.0,0}, &vmath.Vector3{0,0,-1}, 1.5, &vmath.Vector3{0.5,0,0}))
 	//scene.AddLight(lights.MakeSpotLight(&vmath.Point3{-2,2, 2}, &vmath.Point3{0,0.0,0}, &vmath.Vector3{0,0,-1}, 1.5, &vmath.Vector3{0,0.5,0}))
@@ -317,18 +327,18 @@ func main() {
 	startTime := time.Now()
 	frameCount := 0
 	for glfw.WindowParam(glfw.Opened) == 1 {
-		if frameCount%1000 == 0 {
+		if frameCount % 1000 == 0 {
 			thisFrameTime := time.Now()
 			seconds := thisFrameTime.Sub(startTime).Seconds() / 1000.0
-			fmt.Printf("Frametime: %4.1f ms (%4.1f fps)\n", 1000.0*seconds, 1.0/seconds)
+			fmt.Printf("Frametime: %4.1f ms (%4.1f fps)\n", 1000.0 * seconds, 1.0 / seconds)
 
 			startTime = thisFrameTime
 		}
 
 		camX := float32(-3 * math.Sin(float64(t)))
-		camZ := 0.7 + float32(-3*math.Cos(float64(t)))
+		camZ := 0.7 +  float32(-3 * math.Cos(float64(t)))
 
-		scene.SetCameraLookAt(&vmath.Point3{camX, 2, camZ}, &vmath.Point3{0, 0.6, 0.7}, &vmath.Vector3{0, 1, 0})
+		scene.SetCameraLookAt(&vmath.Point3{camX, 2, camZ}, &vmath.Point3{0,0.6,0.7}, &vmath.Vector3{0,1,0})
 
 		gl.Clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
 		scene.Render()
@@ -341,49 +351,52 @@ func main() {
 		//ambientBlitShader.ProgramUniform1i(0,0)
 		//ambientBlitShader.Enable()
 
+
 		//fsQuadVAO.Draw()
 
 		//ambientBlitShader.Disable()
+
 
 		//blurFilter.EndRender()
 		//blurFilter.DisplayBlurResult()
 
 		// bind textures
-		/*
-			gl.ActiveTexture(gl.TEXTURE0)
-			gl.BindTexture(gl.TEXTURE_2D, gbuf.GetAlbedoTex())
+/*
+		gl.ActiveTexture(gl.TEXTURE0)
+		gl.BindTexture(gl.TEXTURE_2D, gbuf.GetAlbedoTex())
 
-			gl.ActiveTexture(gl.TEXTURE1)
-			gl.BindTexture(gl.TEXTURE_2D, gbuf.GetNormalTex())
+		gl.ActiveTexture(gl.TEXTURE1)
+		gl.BindTexture(gl.TEXTURE_2D, gbuf.GetNormalTex())
 
-			gl.ActiveTexture(gl.TEXTURE2)
-			gl.BindTexture(gl.TEXTURE_2D, gbuf.GetDepthTex())
+		gl.ActiveTexture(gl.TEXTURE2)
+		gl.BindTexture(gl.TEXTURE_2D, gbuf.GetDepthTex())
+	
+		quadShader.ProgramUniform1i(0, 0)
+		quadShader.ProgramUniform1i(1, 1)
+		quadShader.ProgramUniform1i(2, 2)
 
-			quadShader.ProgramUniform1i(0, 0)
-			quadShader.ProgramUniform1i(1, 1)
-			quadShader.ProgramUniform1i(2, 2)
+		quadShader.Enable()
+		quadVAO.Draw()
+		quadShader.Disable()
 
-			quadShader.Enable()
-			quadVAO.Draw()
-			quadShader.Disable()
+		gl.BindTexture(gl.TEXTURE_2D, 0)
+		gl.ActiveTexture(gl.TEXTURE2)
+		gl.BindTexture(gl.TEXTURE_2D, 0)
+		gl.ActiveTexture(gl.TEXTURE1)
+		gl.BindTexture(gl.TEXTURE_2D, 0)
+		gl.ActiveTexture(gl.TEXTURE0)
+		gl.BindTexture(gl.TEXTURE_2D, 0)
 
-			gl.BindTexture(gl.TEXTURE_2D, 0)
-			gl.ActiveTexture(gl.TEXTURE2)
-			gl.BindTexture(gl.TEXTURE_2D, 0)
-			gl.ActiveTexture(gl.TEXTURE1)
-			gl.BindTexture(gl.TEXTURE_2D, 0)
-			gl.ActiveTexture(gl.TEXTURE0)
-			gl.BindTexture(gl.TEXTURE_2D, 0)
+		
+	
+		
+*/
 
-
-
-
-		*/
-
-		t = 16.4
-
-		//t = t + 0.03 / 360.0 * 2 * math.Pi
+	t = 16.4;
+		
+		//t = t + 0.03 / 360.0 * 2 * math.Pi 
 		glfw.SwapBuffers()
 		frameCount++
 	}
 }
+

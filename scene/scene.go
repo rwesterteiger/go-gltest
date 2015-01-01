@@ -1,7 +1,7 @@
 package scene
 
 import (
-	gl "github.com/rwesterteiger/gogl/gl32"
+	gl "github.com/chsc/gogl/gl43"
 	//"github.com/jteeuwen/glfw"
 	//	"github.com/rwesterteiger/vectormath"
 	"log"

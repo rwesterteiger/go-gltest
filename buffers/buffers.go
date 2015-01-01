@@ -1,7 +1,7 @@
 package buffers
 
 import (
-	gl "github.com/rwesterteiger/gogl/gl32"
+	gl "github.com/chsc/gogl/gl43"
 	vmath "github.com/rwesterteiger/vectormath"
 )
 
