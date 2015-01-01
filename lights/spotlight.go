@@ -12,11 +12,11 @@ import (
 	
 )
 const dbgVtxShaderSrc = `
-	#version 430
+	#version 330
 
-	layout (location = 0) in vec3 vtx;
+	in vec3 vtx;
 
-	layout (location = 4) uniform mat4 PV;
+	uniform mat4 PV;
 
 	void main(void) {
 		vec4 pos = PV * vec4(vtx,1);
@@ -25,11 +25,11 @@ const dbgVtxShaderSrc = `
 `
 
 const dbgFragShaderSrc = `
-	#version 430
+	#version 330
 	
-	layout (location = 0) out vec4 fragData;
+	out vec4 fragData;
 
-	layout (location = 0) uniform sampler2D depthTex;
+	uniform sampler2D depthTex;
 
 	void main(void)
 	{
@@ -45,13 +45,13 @@ const dbgFragShaderSrc = `
 
 
 const spotLightVtxShaderSrc =`
-	#version 430
+	#version 330
 
-	layout (location = 0) in vec3 vtx;
-	// layout (location = 1) in vec2 tc;
-	layout (location = 5) uniform mat4 PV;
+	in vec3 vtx;
+	// in vec2 tc;
+	uniform mat4 PV;
 
-	layout (location = 1) noperspective out vec2 tcNormalized;
+	noperspective out vec2 tcNormalized;
 	void main(void) {
 		gl_Position = PV * vec4(vtx,1);
 		tcNormalized = 0.5 * gl_Position.xy / gl_Position.w + 0.5;
@@ -59,23 +59,23 @@ const spotLightVtxShaderSrc =`
 	`
 
 const spotLightFragShaderSrc = `
-	#version 430
+	#version 330
 
 	#define M_PI (3.14159265358979323846)
 
-	layout (location = 0) out vec4 fragData;
-	layout (location = 1) noperspective in vec2 tcNormalized;
+	out vec4 fragData;
+	noperspective in vec2 tcNormalized;
 
-	layout (location = 0) uniform sampler2D albedoTex;
-	layout (location = 1) uniform sampler2D normalTex;
-	layout (location = 2) uniform sampler2D depthTex;
-	layout (location = 3) uniform sampler2DShadow shadowMapTex;
-	layout (location = 4) uniform vec4 lightPosAndAngle; // xyz = eyespace pos, w = opening angle
-	layout (location = 9) uniform mat4 invP; // camera NDC -> viewspace
-	layout (location = 13) uniform mat4 shadowPV; // camera viewspace --> shadow clipspace
-	layout (location = 17) uniform vec3 color;
-	layout (location = 18) uniform mat4 V;
-	layout (location = 19) uniform vec3 lightDir;
+	uniform sampler2D albedoTex;
+	uniform sampler2D normalTex;
+	uniform sampler2D depthTex;
+	uniform sampler2DShadow shadowMapTex;
+	uniform vec4 lightPosAndAngle; // xyz = eyespace pos, w = opening angle
+	uniform mat4 invP; // camera NDC -> viewspace
+	uniform mat4 shadowPV; // camera viewspace --> shadow clipspace
+	uniform vec3 color;
+	uniform mat4 V;
+	uniform vec3 lightDir;
 
 	const mat4 bias = mat4(0.5, 0.0, 0.0, 0.0,
 		               0.0, 0.5, 0.0, 0.0,
@@ -88,16 +88,16 @@ const spotLightFragShaderSrc = `
 
 		float d = 0.0;
 
-		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2(-1,-1)).x;
-		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2( 0,-1)).x;
-		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2( 1,-1)).x;
+		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2(-1,-1));
+		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2( 0,-1));
+		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2( 1,-1));
 
-		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2(-1, 0)).x;
-		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2( 1, 0)).x;
+		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2(-1, 0));
+		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2( 1, 0));
 
-		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2(-1, 1)).x;
-		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2( 0, 1)).x;
-		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2( 1, 1)).x;
+		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2(-1, 1));
+		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2( 0, 1));
+		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2( 1, 1));
 
 		d /= 8.0;
 
@@ -107,9 +107,9 @@ const spotLightFragShaderSrc = `
 
 	void main(void)
 	{
-		vec4 diffuseMaterial = texture2D(albedoTex, tcNormalized);
-		float z = texture2D(depthTex, tcNormalized).x;
-		vec3 n = texture2D(normalTex, tcNormalized).xyz; // eyespace normal
+		vec4 diffuseMaterial = texture(albedoTex, tcNormalized);
+		float z = texture(depthTex, tcNormalized).x;
+		vec3 n = texture(normalTex, tcNormalized).xyz; // eyespace normal
 
 		// determine eye-space position of pixel
     		vec4 vProjectedPos = 2 * vec4(tcNormalized, z, 1.0) - 1;

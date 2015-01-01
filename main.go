@@ -2,7 +2,7 @@ package main
 
 import (
 	gl "github.com/rwesterteiger/gogl/gl32"
-	"github.com/jteeuwen/glfw"
+	glfw "github.com/go-gl/glfw3"
 	//	"github.com/rwesterteiger/vectormath"
 	"fmt"
 	"github.com/rwesterteiger/go-gltest/buffers"
@@ -25,9 +25,9 @@ const (
 )
 
 const vertexShaderSource = `
-#version 430
-layout (location = 0) in vec3 vtxPos;
-layout (location = 1) in vec2 texCoord;
+#version 330
+in vec3 vtxPos;
+in vec2 texCoord;
 out vec3 vPosition;
 out vec2 vTexCoord;
 
@@ -38,8 +38,8 @@ void main(void) {
 `
 
 const fragmentShaderSource = `
-#version 430
-layout (location = 0) out vec4 fragData;
+#version 330
+out vec4 fragData;
 in vec3 tcNormal;
 
 void main(void)
@@ -64,9 +64,9 @@ func makePlaneVAO() *buffers.VAO {
 
 func makeQuadShader() (quadShader *shader.Shader) {
 	const quadVtxShaderSrc = `
-	#version 430
-	layout (location = 0) in vec2 vtx;
-	layout (location = 1) in vec2 tc;
+	#version 330
+	in vec2 vtx;
+	in vec2 tc;
 
 	out vec2 vTc;
 
@@ -77,13 +77,13 @@ func makeQuadShader() (quadShader *shader.Shader) {
 	`
 
 	const quadFragShaderSrc = `
-	#version 430
-	layout (location = 0) out vec4 fragData;
+	#version 330
+	out vec4 fragData;
 	in vec2 vTc;
 
-	layout (location = 0) uniform sampler2D albedoTex;
-	layout (location = 1) uniform sampler2D normalTex;
-	layout (location = 2) uniform sampler2D depthTex;
+	uniform sampler2D albedoTex;
+	uniform sampler2D normalTex;
+	uniform sampler2D depthTex;
 
 	void main(void)
 	{
@@ -97,13 +97,13 @@ func makeQuadShader() (quadShader *shader.Shader) {
 
 		switch (int(vTc.x * 3)) {
 			case 0:
-				fragData = texture2D(albedoTex, tc);
+				fragData = texture(albedoTex, tc);
 				break;
 			case 1:
-				fragData = vec4(pow(texture2D(depthTex, tc).x, 16));
+				fragData = vec4(pow(texture(depthTex, tc).x, 16));
 				break;
 			case 2:
-				fragData = texture2D(normalTex, tc) /2 + 0.5;
+				fragData = texture(normalTex, tc) /2 + 0.5;
 				break;
 		}
 
@@ -121,9 +121,9 @@ func makeQuadShader() (quadShader *shader.Shader) {
 
 func makeAmbientBlitShader() *shader.Shader {
 	const vSrc = `
-	#version 430
-	layout (location = 0) in vec2 vtx;
-	layout (location = 1) in vec2 tc;
+	#version 330
+	in vec2 vtx;
+	in vec2 tc;
 
 	out vec2 vTc;
 
@@ -134,11 +134,11 @@ func makeAmbientBlitShader() *shader.Shader {
 	`
 
 	const fSrc = `
-	#version 430
-	layout (location = 0) out vec4 fragData;
+	#version 330
+	out vec4 fragData;
 	in vec2 vTc;
 
-	layout (location = 0) uniform sampler2D albedoTex;
+	uniform sampler2D albedoTex;
 
 	void main(void)
 	{
@@ -228,24 +228,35 @@ func makeSceneRenderer() func(float32,  *vmath.Matrix4, *vmath.Matrix4) {
 }
 
 */
+
+func glfwError(code glfw.ErrorCode, desc string) {
+	fmt.Printf("GLFW error: %v\n", desc)
+}
+
 func main() {
-	if err := glfw.Init(); err != nil {
-		log.Fatal(err)
+	glfw.SetErrorCallback(glfwError)
+
+	if !glfw.Init()  {
+		log.Fatal("glfw.Init() failed!")
 	}
 	defer glfw.Terminate()
 
-	glfw.OpenWindowHint(glfw.OpenGLVersionMajor, 3)
-	glfw.OpenWindowHint(glfw.OpenGLVersionMinor, 2)
-	// glfw.OpenWindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
-	glfw.OpenWindowHint(glfw.WindowNoResize, 1)
-	glfw.SetSwapInterval(0)
+	fmt.Printf("init done\n")
 
-	if err := glfw.OpenWindow(Width, Height, 0, 0, 0, 0, 32, 0, glfw.Windowed); err != nil {
+	glfw.WindowHint(glfw.ContextVersionMajor, 3)
+	glfw.WindowHint(glfw.ContextVersionMinor, 2)
+	glfw.WindowHint(glfw.OpenglForwardCompatible, gl.TRUE)
+	glfw.WindowHint(glfw.OpenglProfile, glfw.OpenglCoreProfile)
+//glfw.OpenWindowHint(glfw.WindowNoResize, 1)
+	//glfw.SetSwapInterval(0)
+	
+	win, err := glfw.CreateWindow(Width, Height, Title, nil, nil)
+	
+	if err != nil {
 		log.Fatal(err)
 	}
-	defer glfw.CloseWindow()
-
-	glfw.SetWindowTitle(Title)
+	
+	win.MakeContextCurrent()
 
 	if err := gl.Init(); err != nil {
 		log.Fatal(err)
@@ -316,7 +327,7 @@ func main() {
 
 	startTime := time.Now()
 	frameCount := 0
-	for glfw.WindowParam(glfw.Opened) == 1 {
+	for !win.ShouldClose() {
 		if frameCount%1000 == 0 {
 			thisFrameTime := time.Now()
 			seconds := thisFrameTime.Sub(startTime).Seconds() / 1000.0
@@ -383,7 +394,8 @@ func main() {
 		t = 16.4
 
 		//t = t + 0.03 / 360.0 * 2 * math.Pi
-		glfw.SwapBuffers()
+		win.SwapBuffers()
+		glfw.PollEvents()
 		frameCount++
 	}
 }

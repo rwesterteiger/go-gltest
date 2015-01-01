@@ -1,10 +1,13 @@
 package shader
 
 import (
+	"C"
+	"unsafe"
 	"fmt"
 	gl "github.com/rwesterteiger/gogl/gl32"
 	vmath "github.com/rwesterteiger/vectormath"
-	"log"
+	"strings"
+	// "log"
 )
 
 type Shader struct {
@@ -33,7 +36,17 @@ func (s *Shader) AddShaderSource(src string, sType gl.Enum) {
 	fmt.Printf("compile result = %v\n", success)
 
 	if success == 0 {
-		log.Fatal("Shader compilation failed!")
+		fmt.Println("Error compiling shader:")
+
+		lines := strings.Split(src, "\n")
+	
+		for i,s := range(lines) {
+			fmt.Printf("%10d %v\n", i+1, s)
+		}
+		fmt.Println("")
+
+		s.printShaderLog(obj)
+		panic("Shader compilation error")
 	}
 	gl.AttachShader(s.program, obj)
 }
@@ -51,7 +64,9 @@ func (s *Shader) Link() {
 	fmt.Printf("link result = %v\n", success)
 
 	if success == 0 {
-		log.Fatal("Shader linking failed!")
+		fmt.Printf("Error linking shader!")
+		s.printShaderLog(s.program)
+		panic("Shader linking error")
 	}
 }
 
@@ -124,3 +139,31 @@ func (s *Shader) ProgramUniform1i(location int, x int) {
 	gl.Uniform1i(gl.Int(location), gl.Int(x))
 	s.Disable()
 }
+
+func (s *Shader) printShaderLog(obj gl.Uint) {
+	var logLength gl.Int
+	logLength = 1
+	gl.GetShaderiv(obj, gl.INFO_LOG_LENGTH, &logLength)
+
+	log := make([]byte, logLength+1) // make sure it zero terminated
+
+	var result gl.Sizei
+
+	gl.GetShaderInfoLog(obj, gl.Sizei(logLength), &result, (*gl.Char)(unsafe.Pointer(&log[0])))
+
+	if result == 0 {
+		fmt.Println("Unable to retrieve shader info log!")
+		return
+	}
+
+
+	fmt.Printf("Shader error log:\n%v\n", string(log))
+}
+
+func (s *Shader) GetUniformLocation(name string) int {
+	glName := gl.GLString(name)
+	defer gl.GLStringFree(glName)
+
+	return int(gl.GetUniformLocation(s.program, glName))
+}
+

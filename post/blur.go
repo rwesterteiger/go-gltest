@@ -10,8 +10,8 @@ import (
 )
 
 const vtxShaderSrc =`
-	#version 430
-	layout (location = 0) in vec2 vtx;
+	#version 330
+	in vec2 vtx;
 	noperspective out vec2 vTc;
 
 	void main(void) {
@@ -21,18 +21,18 @@ const vtxShaderSrc =`
 	`
 
 const downSampleFragShaderSrc = `
-	#version 430
-	layout (location = 0) out vec4 fragData;
+	#version 330
+	out vec4 fragData;
 
-	layout (location = 0) uniform sampler2D inputTex;
-	layout (location = 1) uniform vec2 inputTexelSize;
+	uniform sampler2D inputTex;
+	uniform vec2 inputTexelSize;
 
 	void main(void) {
 		vec2 tc = (2 + 4 * gl_FragCoord.xy) * inputTexelSize;
-		vec4 a = texture2D(inputTex, tc + vec2(-1,-1) * inputTexelSize);
-		vec4 b = texture2D(inputTex, tc + vec2( 1,-1) * inputTexelSize);
-		vec4 c = texture2D(inputTex, tc + vec2( 1, 1) * inputTexelSize);
-		vec4 d = texture2D(inputTex, tc + vec2(-1, 1) * inputTexelSize);
+		vec4 a = texture(inputTex, tc + vec2(-1,-1) * inputTexelSize);
+		vec4 b = texture(inputTex, tc + vec2( 1,-1) * inputTexelSize);
+		vec4 c = texture(inputTex, tc + vec2( 1, 1) * inputTexelSize);
+		vec4 d = texture(inputTex, tc + vec2(-1, 1) * inputTexelSize);
 		
 	
 		fragData = (a+b+c+d) / 4.0;
@@ -41,25 +41,25 @@ const downSampleFragShaderSrc = `
 	`
 
 const blurXFragShaderSrc = `
-	#version 430
-	layout (location = 0) out vec4 fragData;
+	#version 330
+	out vec4 fragData;
 
-	layout (location = 0) uniform sampler2D inputTex;
-	layout (location = 1) uniform vec2 inputTexelSize;
+	uniform sampler2D inputTex;
+	uniform vec2 inputTexelSize;
 
 	void main(void) {
 		vec2 tc = gl_FragCoord.xy * inputTexelSize;
 		vec4 sum = vec4(0);
 	
-		sum += 0.0162162162 * texture2D(inputTex, vec2(tc.x - 4 * inputTexelSize.x, tc.y));
-		sum += 0.0540540541 * texture2D(inputTex, vec2(tc.x - 3 * inputTexelSize.x, tc.y));
-		sum += 0.1216216216 * texture2D(inputTex, vec2(tc.x - 2 * inputTexelSize.x, tc.y));
-		sum += 0.1945945946 * texture2D(inputTex, vec2(tc.x - 1 * inputTexelSize.x, tc.y));
-		sum += 0.2270270270 * texture2D(inputTex, vec2(tc.x - 0 * inputTexelSize.x, tc.y));
-		sum += 0.1945945946 * texture2D(inputTex, vec2(tc.x + 1 * inputTexelSize.x, tc.y));
-		sum += 0.1216216216 * texture2D(inputTex, vec2(tc.x + 2 * inputTexelSize.x, tc.y));
-		sum += 0.0540540541 * texture2D(inputTex, vec2(tc.x + 3 * inputTexelSize.x, tc.y));
-		sum += 0.0162162162 * texture2D(inputTex, vec2(tc.x + 4 * inputTexelSize.x, tc.y));
+		sum += 0.0162162162 * texture(inputTex, vec2(tc.x - 4 * inputTexelSize.x, tc.y));
+		sum += 0.0540540541 * texture(inputTex, vec2(tc.x - 3 * inputTexelSize.x, tc.y));
+		sum += 0.1216216216 * texture(inputTex, vec2(tc.x - 2 * inputTexelSize.x, tc.y));
+		sum += 0.1945945946 * texture(inputTex, vec2(tc.x - 1 * inputTexelSize.x, tc.y));
+		sum += 0.2270270270 * texture(inputTex, vec2(tc.x - 0 * inputTexelSize.x, tc.y));
+		sum += 0.1945945946 * texture(inputTex, vec2(tc.x + 1 * inputTexelSize.x, tc.y));
+		sum += 0.1216216216 * texture(inputTex, vec2(tc.x + 2 * inputTexelSize.x, tc.y));
+		sum += 0.0540540541 * texture(inputTex, vec2(tc.x + 3 * inputTexelSize.x, tc.y));
+		sum += 0.0162162162 * texture(inputTex, vec2(tc.x + 4 * inputTexelSize.x, tc.y));
 		
 		fragData = sum;
 	}
@@ -67,25 +67,25 @@ const blurXFragShaderSrc = `
 
 
 const blurYFragShaderSrc = `
-	#version 430
-	layout (location = 0) out vec4 fragData;
+	#version 330
+	out vec4 fragData;
 
-	layout (location = 0) uniform sampler2D inputTex;
-	layout (location = 1) uniform vec2 inputTexelSize;
+	uniform sampler2D inputTex;
+	uniform vec2 inputTexelSize;
 
 	void main(void) {
 		vec2 tc = gl_FragCoord.xy * inputTexelSize;
 		vec4 sum = vec4(0);
 	
-		sum += 0.0162162162 * texture2D(inputTex, vec2(tc.x, tc.y - 4 * inputTexelSize.y));
-		sum += 0.0540540541 * texture2D(inputTex, vec2(tc.x, tc.y - 3 * inputTexelSize.y));
-		sum += 0.1216216216 * texture2D(inputTex, vec2(tc.x, tc.y - 2 * inputTexelSize.y));
-		sum += 0.1945945946 * texture2D(inputTex, vec2(tc.x, tc.y - 1 * inputTexelSize.y));
-		sum += 0.2270270270 * texture2D(inputTex, vec2(tc.x, tc.y - 0 * inputTexelSize.y));
-		sum += 0.1945945946 * texture2D(inputTex, vec2(tc.x, tc.y + 1 * inputTexelSize.y));
-		sum += 0.1216216216 * texture2D(inputTex, vec2(tc.x, tc.y + 2 * inputTexelSize.y));
-		sum += 0.0540540541 * texture2D(inputTex, vec2(tc.x, tc.y + 3 * inputTexelSize.y));
-		sum += 0.0162162162 * texture2D(inputTex, vec2(tc.x, tc.y + 4 * inputTexelSize.y));
+		sum += 0.0162162162 * texture(inputTex, vec2(tc.x, tc.y - 4 * inputTexelSize.y));
+		sum += 0.0540540541 * texture(inputTex, vec2(tc.x, tc.y - 3 * inputTexelSize.y));
+		sum += 0.1216216216 * texture(inputTex, vec2(tc.x, tc.y - 2 * inputTexelSize.y));
+		sum += 0.1945945946 * texture(inputTex, vec2(tc.x, tc.y - 1 * inputTexelSize.y));
+		sum += 0.2270270270 * texture(inputTex, vec2(tc.x, tc.y - 0 * inputTexelSize.y));
+		sum += 0.1945945946 * texture(inputTex, vec2(tc.x, tc.y + 1 * inputTexelSize.y));
+		sum += 0.1216216216 * texture(inputTex, vec2(tc.x, tc.y + 2 * inputTexelSize.y));
+		sum += 0.0540540541 * texture(inputTex, vec2(tc.x, tc.y + 3 * inputTexelSize.y));
+		sum += 0.0162162162 * texture(inputTex, vec2(tc.x, tc.y + 4 * inputTexelSize.y));
 		
 		fragData = sum;
 
@@ -114,16 +114,16 @@ const blurYFragShaderSrc = `
 27.}
 */
 const blendFragShaderSrc = `
-	#version 430
+	#version 330
 	noperspective in vec2 vTc;
 
-	layout (location = 0) out vec4 fragData;
+	out vec4 fragData;
 
-	layout (location = 0) uniform sampler2D sceneTex;
-	layout (location = 1) uniform sampler2D blurredTex;
+	uniform sampler2D sceneTex;
+	uniform sampler2D blurredTex;
 
 	vec3 toneMap(vec2 tc) {
-		vec3 texColor = texture2D(sceneTex, tc).rgb;
+		vec3 texColor = texture(sceneTex, tc).rgb;
 		texColor *= 0.5; // exposure
 
 		vec3 x = max(vec3(0), texColor - 0.004);
@@ -133,18 +133,18 @@ const blendFragShaderSrc = `
 	}
 
 	void main(void) {
-		vec3 blurredColor = texture2D(blurredTex, vTc).rgb;
+		vec3 blurredColor = texture(blurredTex, vTc).rgb;
 		fragData = vec4(toneMap(vTc) + blurredColor, 1);
 
 		if (vTc.x > 0.4 && vTc.y > 0.8) {
 			float y = 5 * (vTc.y - 0.8);
 
 			if (vTc.x > 0.8) {
-				fragData = texture2D(blurredTex, vec2(5*(vTc.x-0.8), y));
+				fragData = texture(blurredTex, vec2(5*(vTc.x-0.8), y));
 			} else if (vTc.x > 0.6) {
 				fragData = vec4(toneMap(vec2(5 * (vTc.x - 0.6), y)), 1);
 			} else {
-				fragData = texture2D(sceneTex, vec2(5 * (vTc.x - 0.4), y));
+				fragData = texture(sceneTex, vec2(5 * (vTc.x - 0.4), y));
 			}
 		}
 	}

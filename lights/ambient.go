@@ -9,11 +9,11 @@ import (
 )
 
 const ambientLightVtxShaderSrc =`
-	#version 430
+	#version 330
 
-	layout (location = 0) in vec3 vtx;
+	in vec3 vtx;
 
-	layout (location = 1) noperspective out vec2 tc;
+	noperspective out vec2 tc;
 	void main(void) {
 		gl_Position = vec4(vtx,1);
 		tc = 0.5 * gl_Position.xy / gl_Position.w + 0.5;
@@ -21,18 +21,18 @@ const ambientLightVtxShaderSrc =`
 	`
 
 const ambientLightFragShaderSrc = `
-	#version 430
+	#version 330
 
 	#define M_PI (3.14159265358979323846)
 
-	layout (location = 0) out vec4 fragData;
-	layout (location = 1) noperspective in vec2 tc;
+	out vec4 fragData;
+	noperspective in vec2 tc;
 
-	layout (location = 0) uniform sampler2D albedoTex;
+	uniform sampler2D albedoTex;
 
 	void main(void)
 	{
-		fragData = 0.2 * texture2D(albedoTex, tc);
+		fragData = 0.2 * texture(albedoTex, tc);
 	}
 `
 

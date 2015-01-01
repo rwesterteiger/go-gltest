@@ -10,8 +10,8 @@ import (
 )
 
 const dofVtxShaderSrc =`
-	#version 430
-	layout (location = 0) in vec2 vtx;
+	#version 330
+	in vec2 vtx;
 	noperspective out vec2 vTc;
 
 	void main(void) {
@@ -21,15 +21,15 @@ const dofVtxShaderSrc =`
 	`
 
 const dofFragShaderSrc = `
-	#version 430
-	layout (location = 0) out vec4 fragData;
+	#version 330
+	out vec4 fragData;
 
 	noperspective in vec2 vTc;
 
-	layout (location = 0) uniform sampler2D inputTex;
-	layout (location = 1) uniform sampler2D depthTex;
-	layout (location = 2) uniform float focusDistance;
-	layout (location = 3) uniform mat4 invP;
+	uniform sampler2D inputTex;
+	uniform sampler2D depthTex;
+	uniform float focusDistance;
+	uniform mat4 invP;
 
 	void main(void) {
 		float z = texture(depthTex, vTc).x;

@@ -16,19 +16,18 @@ import (
 )
 
 const objVertexShaderSource = `
-#version 430
-layout (location = 0) in vec3 vtx;
-layout (location = 1) in vec3 normal;
+#version 330
+in vec3 vtx;
+in vec3 normal;
 
 out vec4 vAmbient;
 out vec3 vEyeSpaceNormal;
 out vec4 vAlbedo;
 
-layout (location = 0) uniform mat4 P;
-layout (location = 4) uniform mat4 V;
-layout (location = 8) uniform mat4 M;
-
-layout (location = 12) uniform vec4 diffuseColor;
+uniform mat4 P;
+uniform mat4 V;
+uniform mat4 M;
+uniform vec4 diffuseColor;
 		
 void main(void) {
 	gl_Position = P * V * M * vec4(vtx,1);
@@ -38,12 +37,12 @@ void main(void) {
 `
 
 const objFragShaderSource = `
-#version 430
+#version 330
 
 #define M_PI (3.14159265358979323846)
 
-layout (location = 0) out vec4 fragAlbedo;
-layout (location = 1) out vec3 fragNormal;
+out vec4 fragAlbedo;
+out vec3 fragNormal;
 
 in vec3 vEyeSpaceNormal;
 in vec4 vAlbedo;
@@ -140,9 +139,9 @@ func makeFullscreenQuadVAO() (*buffers.VAO) {
 
 func makeBlitShader() (s *shader.Shader) {
 	const vSrc =`
-	#version 430
-	layout (location = 0) in vec2 vtx;
-	layout (location = 1) in vec2 tc;
+	#version 330
+	in vec2 vtx;
+	in vec2 tc;
 
 	out vec2 vTc;
 
@@ -153,15 +152,15 @@ func makeBlitShader() (s *shader.Shader) {
 	`
 
 	const fSrc = `
-	#version 430
-	layout (location = 0) out vec4 fragData;
+	#version 330
+	out vec4 fragData;
 	in vec2 vTc;
 
-	layout (location = 0) uniform sampler2D inTex;
+	uniform sampler2D inTex;
 
 	void main(void)
 	{
-		fragData = texture2D(inTex, vTc);
+		fragData = texture(inTex, vTc);
 	}
 	`
 
