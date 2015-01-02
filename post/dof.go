@@ -11,7 +11,7 @@ import (
 
 const dofVtxShaderSrc =`
 	#version 330
-	in vec2 vtx;
+	layout (location = 0) in vec2 vtx;
 	noperspective out vec2 vTc;
 
 	void main(void) {
@@ -22,7 +22,7 @@ const dofVtxShaderSrc =`
 
 const dofFragShaderSrc = `
 	#version 330
-	out vec4 fragData;
+	layout (location = 0) out vec4 fragData;
 
 	noperspective in vec2 vTc;
 

@@ -13,7 +13,7 @@ import (
 	"math"
 
 	"github.com/rwesterteiger/go-gltest/lights"
-	"github.com/rwesterteiger/go-gltest/post"
+	// "github.com/rwesterteiger/go-gltest/post"
 	"github.com/rwesterteiger/go-gltest/scene"
 	"time"
 )
@@ -26,8 +26,8 @@ const (
 
 const vertexShaderSource = `
 #version 330
-in vec3 vtxPos;
-in vec2 texCoord;
+in (layout location=0) vec3 vtxPos;
+in (layout location=1) vec2 texCoord;
 out vec3 vPosition;
 out vec2 vTexCoord;
 
@@ -40,7 +40,7 @@ void main(void) {
 const fragmentShaderSource = `
 #version 330
 out vec4 fragData;
-in vec3 tcNormal;
+layout (location=0) in vec3 tcNormal;
 
 void main(void)
 {
@@ -65,8 +65,8 @@ func makePlaneVAO() *buffers.VAO {
 func makeQuadShader() (quadShader *shader.Shader) {
 	const quadVtxShaderSrc = `
 	#version 330
-	in vec2 vtx;
-	in vec2 tc;
+	layout (location = 0) in vec2 vtx;
+	layout (location = 1) in vec2 tc;
 
 	out vec2 vTc;
 
@@ -122,8 +122,8 @@ func makeQuadShader() (quadShader *shader.Shader) {
 func makeAmbientBlitShader() *shader.Shader {
 	const vSrc = `
 	#version 330
-	in vec2 vtx;
-	in vec2 tc;
+	layout (location = 0) in vec2 vtx;
+	layout (location = 1) in vec2 tc;
 
 	out vec2 vTc;
 
@@ -135,14 +135,14 @@ func makeAmbientBlitShader() *shader.Shader {
 
 	const fSrc = `
 	#version 330
-	out vec4 fragData;
+	layout (location = 0) out vec4 fragData;
 	in vec2 vTc;
 
 	uniform sampler2D albedoTex;
 
 	void main(void)
 	{
-		fragData = 0.1 * texture2D(albedoTex, vTc);
+		fragData = 0.1 * texture(albedoTex, vTc);
 	}
 	`
 
@@ -317,11 +317,11 @@ func main() {
 	//scene.AddLight(lights.MakeSpotLight(&vmath.Point3{-2,2, 2}, &vmath.Point3{0,0.0,0}, &vmath.Vector3{0,0,-1}, 1.5, &vmath.Vector3{0,0.5,0}))
 	//scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 2,-2}, &vmath.Point3{0,0.0,0}, &vmath.Vector3{0,0,-1}, 1.5, &vmath.Vector3{0,0,0.5}))
 
-	dofFilter := post.MakeDoFFilter(Width, Height, 3.4)
-	scene.AddPostFilter(dofFilter)
+	//dofFilter := post.MakeDoFFilter(Width, Height, 3.4)
+	//scene.AddPostFilter(dofFilter)
 
-	blurFilter := post.MakeBlurFilter(Width, Height)
-	scene.AddPostFilter(blurFilter)
+	//blurFilter := post.MakeBlurFilter(Width, Height)
+	//scene.AddPostFilter(blurFilter)
 
 	var t float32 = 0.0
 
@@ -341,6 +341,7 @@ func main() {
 
 		scene.SetCameraLookAt(&vmath.Point3{camX, 2, camZ}, &vmath.Point3{0, 0.6, 0.7}, &vmath.Vector3{0, 1, 0})
 
+		gl.ClearColor(0,0,0,0)
 		gl.Clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
 		scene.Render()
 
@@ -349,7 +350,7 @@ func main() {
 		//gl.ActiveTexture(gl.TEXTURE0)
 		//gl.BindTexture(gl.TEXTURE_2D, gbuf.GetAlbedoTex())
 
-		//ambientBlitShader.ProgramUniform1i(0,0)
+		// ambientBlitShader.ProgramUniform1i(0,0)
 		//ambientBlitShader.Enable()
 
 		//fsQuadVAO.Draw()
@@ -391,7 +392,7 @@ func main() {
 
 		*/
 
-		t = 16.4
+		// t = 16.4
 
 		//t = t + 0.03 / 360.0 * 2 * math.Pi
 		win.SwapBuffers()

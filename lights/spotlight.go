@@ -14,7 +14,7 @@ import (
 const dbgVtxShaderSrc = `
 	#version 330
 
-	in vec3 vtx;
+	layout (location = 0) in vec3 vtx;
 
 	uniform mat4 PV;
 
@@ -27,7 +27,7 @@ const dbgVtxShaderSrc = `
 const dbgFragShaderSrc = `
 	#version 330
 	
-	out vec4 fragData;
+	layout (location = 0) out vec4 fragData;
 
 	uniform sampler2D depthTex;
 
@@ -47,8 +47,8 @@ const dbgFragShaderSrc = `
 const spotLightVtxShaderSrc =`
 	#version 330
 
-	in vec3 vtx;
-	// in vec2 tc;
+	layout (location = 0) in vec3 vtx;
+	// layout (location = 1) in vec2 tc;
 	uniform mat4 PV;
 
 	noperspective out vec2 tcNormalized;
@@ -63,7 +63,7 @@ const spotLightFragShaderSrc = `
 
 	#define M_PI (3.14159265358979323846)
 
-	out vec4 fragData;
+	layout (location = 0) out vec4 fragData;
 	noperspective in vec2 tcNormalized;
 
 	uniform sampler2D albedoTex;
@@ -77,10 +77,10 @@ const spotLightFragShaderSrc = `
 	uniform mat4 V;
 	uniform vec3 lightDir;
 
-	const mat4 bias = mat4(0.5, 0.0, 0.0, 0.0,
-		               0.0, 0.5, 0.0, 0.0,
-			       0.0, 0.0, 0.5, 0.0,
-        	               0.5, 0.5, 0.5, 1.0); 
+	const mat4 bias = mat4(	0.5, 0.0, 0.0, 0.0,
+		               		0.0, 0.5, 0.0, 0.0,
+			       			0.0, 0.0, 0.5, 0.0,
+        	               	0.5, 0.5, 0.5, 1.0); 
 
 	float getShadowAttenuation(vec3 pos) {
 		vec4 vShadowCoord = bias * shadowPV * vec4(pos, 1);

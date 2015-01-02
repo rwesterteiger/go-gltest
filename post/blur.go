@@ -11,7 +11,7 @@ import (
 
 const vtxShaderSrc =`
 	#version 330
-	in vec2 vtx;
+	layout (location = 0) in vec2 vtx;
 	noperspective out vec2 vTc;
 
 	void main(void) {
@@ -22,7 +22,7 @@ const vtxShaderSrc =`
 
 const downSampleFragShaderSrc = `
 	#version 330
-	out vec4 fragData;
+	layout (location = 0) out vec4 fragData;
 
 	uniform sampler2D inputTex;
 	uniform vec2 inputTexelSize;
@@ -42,7 +42,7 @@ const downSampleFragShaderSrc = `
 
 const blurXFragShaderSrc = `
 	#version 330
-	out vec4 fragData;
+	layout (location = 0) out vec4 fragData;
 
 	uniform sampler2D inputTex;
 	uniform vec2 inputTexelSize;
@@ -68,7 +68,7 @@ const blurXFragShaderSrc = `
 
 const blurYFragShaderSrc = `
 	#version 330
-	out vec4 fragData;
+	layout (location = 0) out vec4 fragData;
 
 	uniform sampler2D inputTex;
 	uniform vec2 inputTexelSize;
@@ -117,7 +117,7 @@ const blendFragShaderSrc = `
 	#version 330
 	noperspective in vec2 vTc;
 
-	out vec4 fragData;
+	layout (location = 0) out vec4 fragData;
 
 	uniform sampler2D sceneTex;
 	uniform sampler2D blurredTex;

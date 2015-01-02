@@ -17,8 +17,8 @@ import (
 
 const objVertexShaderSource = `
 #version 330
-in vec3 vtx;
-in vec3 normal;
+layout (location = 0) in vec3 vtx;
+layout (location = 1) in vec3 normal;
 
 out vec4 vAmbient;
 out vec3 vEyeSpaceNormal;
@@ -41,8 +41,8 @@ const objFragShaderSource = `
 
 #define M_PI (3.14159265358979323846)
 
-out vec4 fragAlbedo;
-out vec3 fragNormal;
+layout (location = 0) out vec4 fragAlbedo;
+layout (location = 1) out vec3 fragNormal;
 
 in vec3 vEyeSpaceNormal;
 in vec4 vAlbedo;
@@ -140,8 +140,8 @@ func makeFullscreenQuadVAO() (*buffers.VAO) {
 func makeBlitShader() (s *shader.Shader) {
 	const vSrc =`
 	#version 330
-	in vec2 vtx;
-	in vec2 tc;
+	layout (location = 0) in vec2 vtx;
+	layout (location = 1) in vec2 tc;
 
 	out vec2 vTc;
 
@@ -153,7 +153,7 @@ func makeBlitShader() (s *shader.Shader) {
 
 	const fSrc = `
 	#version 330
-	out vec4 fragData;
+	layout (location = 0) out vec4 fragData;
 	in vec2 vTc;
 
 	uniform sampler2D inTex;
@@ -247,7 +247,10 @@ func (s *Scene) Render() {
 
 
 	s.gbuf.Begin()
+	gl.ClearColor(0,1,0,0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+	gl.ClearColor(0,1,0,0)
 	s.doRender(&s.camProjMat, &s.camViewMat)
 	s.gbuf.End()
 
