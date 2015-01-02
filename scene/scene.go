@@ -15,6 +15,14 @@ import (
 	"github.com/rwesterteiger/go-gltest/lights"
 )
 
+type objShaderUniforms struct {
+	P 				vmath.Matrix4 	`glUniform:"mat4"`
+	V 				vmath.Matrix4 	`glUniform:"V"`
+	M 				vmath.Matrix4 	`glUniform:"V"`
+	DiffuseColor 	vmath.Vector4	`glUniform:"diffuseColor"`
+	
+}
+
 const objVertexShaderSource = `
 #version 330
 layout (location = 0) in vec3 vtx;
@@ -172,6 +180,9 @@ func makeBlitShader() (s *shader.Shader) {
 	return
 }
 
+type blitShaderUniforms struct {
+	InTex 	int 	`glUniform:"inTex"`
+}
 
 func (s *Scene) Delete() {
 	for _,o := range s.objects {
@@ -214,17 +225,23 @@ func (s *Scene) SetCameraLookAt(eyePos, lookAtPos *vmath.Point3, upVec *vmath.Ve
 
 func (s *Scene) doRender(P, V *vmath.Matrix4) {
 	sh := s.objShader
-	sh.ProgramUniformM4(0, P)
-	sh.ProgramUniformM4(4, V)
-	
+
+	uniforms := &objShaderUniforms{
+		P : *P,
+		V : *V,
+	}
+
 	sh.BindFragDataLocation(0, "fragAlbedo")
 	sh.BindFragDataLocation(1, "fragNormal")
 
 	sh.Enable()
 
 	for _, o := range s.objects {
-		sh.ProgramUniformM4(8, o.GetModelMatrix())
-		sh.ProgramUniformF4(12, o.GetDiffuseColor())
+		uniforms.M = *o.GetModelMatrix()
+		uniforms.DiffuseColor = *o.GetDiffuseColor()
+
+		sh.SetUniforms(uniforms)
+		sh.Enable()
 		o.Draw()
 	}
 
@@ -232,6 +249,7 @@ func (s *Scene) doRender(P, V *vmath.Matrix4) {
 }
 
 func (s *Scene) Render() {
+
 	gl.Enable(gl.CULL_FACE)
 	gl.CullFace(gl.BACK)
 
@@ -245,17 +263,20 @@ func (s *Scene) Render() {
 		}
 	}
 
-
 	s.gbuf.Begin()
-	gl.ClearColor(0,1,0,0)
+
+	gl.ClearColor(0,0,0,0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	gl.ClearColor(0,1,0,0)
 	s.doRender(&s.camProjMat, &s.camViewMat)
+
 	s.gbuf.End()
 
 	gl.BindFramebuffer(gl.FRAMEBUFFER, s.outputFBO)
+	gl.ClearColor(0,0,0,0);
 	gl.Clear(gl.COLOR_BUFFER_BIT)
+	gl.ClearColor(0,1,1,0);
 
 	gl.Disable(gl.DEPTH_TEST)
 	gl.Enable(gl.BLEND)
@@ -265,21 +286,25 @@ func (s *Scene) Render() {
 		l.Render(s.gbuf, &s.camProjMat, &s.camViewMat)
 	}
 
-	gl.Disable(gl.BLEND)
 
+	gl.Disable(gl.BLEND)
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
 	tex := s.outputTex
 
+	// apply post processing filters
+/*
 	for _, f := range s.postFilters {
-		tex = f.Apply(s.gbuf, tex, &s.camProjMat, &s.camViewMat)
+		tex = f.Apply(s.gbuf, tex, &s.camProjMat, &s.camViewMat) // each filter returns its output texture
 	}
-
+*/
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, tex)
-	s.blitShader.ProgramUniform1i(0,0)
+
+	u := blitShaderUniforms{ InTex : 0 }
+	s.blitShader.SetUniforms(&u)
 	s.blitShader.Enable()
 	s.fsQuadVAO.Draw()
 	s.blitShader.Disable()

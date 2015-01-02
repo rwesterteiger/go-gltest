@@ -16,6 +16,7 @@ import (
 	// "github.com/rwesterteiger/go-gltest/post"
 	"github.com/rwesterteiger/go-gltest/scene"
 	"time"
+	"runtime"
 )
 
 const (
@@ -50,7 +51,7 @@ void main(void)
 `
 
 func makePlaneVAO() *buffers.VAO {
-	vtxs := buffers.MakeVBOFromVec3s([]vmath.Vector3{{-10, 0, 10}, {10, 0, 10}, {10, 0, -10}, {-10, 0, -10}})
+	vtxs := buffers.MakeVBOFromVec3s([]vmath.Vector3{{-1000, 0, 1000}, {1000, 0, 1000}, {1000, 0, -1000}, {-1000, 0, -1000}})
 	normals := buffers.MakeVBOFromVec3s([]vmath.Vector3{{0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}})
 	indices := []uint32{0, 1, 2, 2, 3, 0}
 
@@ -234,6 +235,8 @@ func glfwError(code glfw.ErrorCode, desc string) {
 }
 
 func main() {
+	runtime.LockOSThread() // opengl doesnt like to be called from different threads
+
 	glfw.SetErrorCallback(glfwError)
 
 	if !glfw.Init()  {
@@ -275,6 +278,7 @@ func main() {
 	var zFar float32 = 100.0
 	scene.SetCameraPerspective(60.0/360.0*2*math.Pi, float32(Width)/float32(Height), zNear, zFar)
 
+/*
 	var blenderToGLXForm vmath.Transform3
 	vmath.T3MakeFromCols(&blenderToGLXForm, &vmath.Vector3{1, 0, 0}, &vmath.Vector3{0, 1, 0}, &vmath.Vector3{0, 0, 1}, &vmath.Vector3{0, 0, 0})
 
@@ -304,14 +308,15 @@ func main() {
 	monkey = geom.LoadOBJ("monkey.obj", &vmath.Vector4{1, 1, 1, 1})
 	monkey.SetModelMatrix(&modelMatrixMonkey)
 	scene.AddObject(monkey)
-
+*/
 	scene.AddObject(geom.MakeObject(makePlaneVAO(), &vmath.Vector4{1, 1, 1, 1}))
 
 	scene.AddLight(lights.MakeAmbientLight())
-
+	/*
 	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 3, -2}, &vmath.Point3{0, 0, -2}, &vmath.Vector3{0, 0, -1}, 2, &vmath.Vector3{0.5, 0, 0}))
 	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 3, 0}, &vmath.Point3{0, 0, 0}, &vmath.Vector3{0, 0, -1}, 2, &vmath.Vector3{0, 0.5, 0}))
 	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 3, 2}, &vmath.Point3{0, 0, 2}, &vmath.Vector3{0, 0, -1}, 2, &vmath.Vector3{0, 0, 0.5}))
+	*/
 
 	//scene.AddLight(lights.MakeSpotLight(&vmath.Point3{2, 2, 2}, &vmath.Point3{0,0.0,0}, &vmath.Vector3{0,0,-1}, 1.5, &vmath.Vector3{0.5,0,0}))
 	//scene.AddLight(lights.MakeSpotLight(&vmath.Point3{-2,2, 2}, &vmath.Point3{0,0.0,0}, &vmath.Vector3{0,0,-1}, 1.5, &vmath.Vector3{0,0.5,0}))
@@ -328,6 +333,11 @@ func main() {
 	startTime := time.Now()
 	frameCount := 0
 	for !win.ShouldClose() {
+		if gl.GetError() != gl.NO_ERROR {
+			fmt.Printf("GL error in frame number %v\n", frameCount)
+		}
+
+
 		if frameCount%1000 == 0 {
 			thisFrameTime := time.Now()
 			seconds := thisFrameTime.Sub(startTime).Seconds() / 1000.0
@@ -341,8 +351,9 @@ func main() {
 
 		scene.SetCameraLookAt(&vmath.Point3{camX, 2, camZ}, &vmath.Point3{0, 0.6, 0.7}, &vmath.Vector3{0, 1, 0})
 
-		gl.ClearColor(0,0,0,0)
+		gl.ClearColor(0,0,0.3,0)
 		gl.Clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
+
 		scene.Render()
 
 		//blurFilter.BeginRender()

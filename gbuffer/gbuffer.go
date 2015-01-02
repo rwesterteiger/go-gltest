@@ -32,15 +32,15 @@ func Make(w,h int) (g *GBuffer) {
 	gl.GenTextures(1, &g.depthTex)
 
 	gl.BindTexture(gl.TEXTURE_2D, g.albedoTex);
-	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, gl.Sizei(w), gl.Sizei(h), 0, gl.RGBA, gl.FLOAT, nil)
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, g.w, g.h, 0, gl.RGBA, gl.FLOAT, nil)
 	setTexParameters()
 
 	gl.BindTexture(gl.TEXTURE_2D, g.normalTex);
-	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB16F, gl.Sizei(w), gl.Sizei(h), 0, gl.RGB, gl.FLOAT, nil);
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB16F, g.w, g.h, 0, gl.RGB, gl.FLOAT, nil);
 	setTexParameters()
 
 	gl.BindTexture(gl.TEXTURE_2D, g.depthTex);
-	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, gl.Sizei(w), gl.Sizei(h), 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, g.w, g.h, 0, gl.DEPTH_COMPONENT, gl.FLOAT, nil)
 	setTexParameters()
 
 	gl.BindTexture(gl.TEXTURE_2D, 0)

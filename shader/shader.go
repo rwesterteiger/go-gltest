@@ -7,10 +7,12 @@ import (
 	gl "github.com/rwesterteiger/gogl/gl32"
 	vmath "github.com/rwesterteiger/vectormath"
 	"strings"
+	"reflect"
 	// "log"
 )
 
 type Shader struct {
+	enabled bool
 	program gl.Uint // just the program handle for now
 }
 
@@ -86,58 +88,108 @@ func (s *Shader) BindAttribLocation(idx gl.Uint, name string) {
 
 func (s *Shader) Enable() {
 	gl.UseProgram(s.program)
+	s.enabled = true
 }
 
-func (_ *Shader) Disable() {
+func (s *Shader) Disable() {
 	gl.UseProgram(0)
+	s.enabled = false
+}
+
+func (s *Shader) withEnabled(f func()) {
+	if (!s.enabled) {
+		s.Enable()
+		defer s.Disable()
+	}
+
+	f()
+}
+
+func (s *Shader) setM4Uniform(location gl.Int, m *vmath.Matrix4) {
+	s.withEnabled(func() {
+		floatData := make([]gl.Float, 16)
+
+		for row := 0; row < 4; row++ {
+			for col := 0; col < 4; col++ {
+				floatData[4*col+row] = gl.Float(m.GetElem(col, row))
+			}
+		}
+
+		gl.UniformMatrix4fv(gl.Int(location), 1, gl.FALSE, &floatData[0])
+	})
 }
 
 func (s *Shader) ProgramUniformM4(location int, m *vmath.Matrix4) {
-	floatData := make([]gl.Float, 16)
-
-	for row := 0; row < 4; row++ {
-		for col := 0; col < 4; col++ {
-			floatData[4*col+row] = gl.Float(m.GetElem(col, row))
-		}
-	}
-
-	gl.UniformMatrix4fv(gl.Int(location), 1, gl.FALSE, &floatData[0])
+	s.withEnabled(func() { s.setM4Uniform(gl.Int(location), m) })
 }
 
 func (s *Shader) ProgramUniformF4(location int, v *vmath.Vector4) {
-	s.Enable()
-	gl.Uniform4f(gl.Int(location), gl.Float(v.X), gl.Float(v.Y), gl.Float(v.Z), gl.Float(v.W))
-	s.Disable()
+	s.withEnabled(func() { gl.Uniform4f(gl.Int(location), gl.Float(v.X), gl.Float(v.Y), gl.Float(v.Z), gl.Float(v.W)) })
 }
 
 func (s *Shader) ProgramUniform1f(location int, x float32) {
-	s.Enable()
-	gl.Uniform1f(gl.Int(location), gl.Float(x))
-	s.Disable()
+	s.withEnabled(func() { gl.Uniform1f(gl.Int(location), gl.Float(x)) })
 }
 
 func (s *Shader) ProgramUniform2f(location int, x float32, y float32) {
-	s.Enable()
 	gl.Uniform2f(gl.Int(location), gl.Float(x), gl.Float(y))
-	s.Disable()
 }
 
 func (s *Shader) ProgramUniform3f(location int, x, y, z float32) {
-	s.Enable()
-	gl.Uniform3f(gl.Int(location), gl.Float(x), gl.Float(y), gl.Float(z))
-	s.Disable()
+	s.withEnabled(func() { gl.Uniform3f(gl.Int(location), gl.Float(x), gl.Float(y), gl.Float(z)) })
 }
 
 func (s *Shader) ProgramUniform4f(location int, x, y, z, w float32) {
-	s.Enable()
-	gl.Uniform4f(gl.Int(location), gl.Float(x), gl.Float(y), gl.Float(z), gl.Float(w))
-	s.Disable()
+	s.withEnabled(func() { gl.Uniform4f(gl.Int(location), gl.Float(x), gl.Float(y), gl.Float(z), gl.Float(w)) })
 }
 
 func (s *Shader) ProgramUniform1i(location int, x int) {
-	s.Enable()
-	gl.Uniform1i(gl.Int(location), gl.Int(x))
-	s.Disable()
+	s.withEnabled(func() { gl.Uniform1i(gl.Int(location), gl.Int(x)) })
+}
+
+// uStruct is assumed to be a pointer to a struct having fields containing uniform values tagged like this:
+//
+// type ambientLightUniforms struct {
+//	albedoTex int		`glUniform : "albedoTex"`
+// }
+
+func (s *Shader) SetUniforms(uStruct interface{}) {
+	s.withEnabled(func() {
+
+		v := reflect.ValueOf(uStruct).Elem() // deref interface, then pointer
+		// t := reflect.TypeOf(v)
+
+		for i := 0; i < v.NumField(); i++ {
+			fieldValue := v.Field(i)
+			fieldType  := v.Type().Field(i)
+			tag := fieldType.Tag
+			// f := v.Field(i)
+
+			//fmt.Printf("Field Name: %s,\t Field Value: %v,\t Tag Value: %s\n", fieldType.Name, fieldValue.Interface(), tag.Get("glUniform"))
+
+			uniformName := tag.Get("glUniform")
+
+			if uniformName == "" { // non-tagged field, ignore
+				continue
+			}
+
+			loc := gl.Int(s.GetUniformLocation(uniformName))
+			//fmt.Println(fieldValue.Interface())
+
+			switch x := fieldValue.Interface().(type) {
+			default:
+				panic(fmt.Sprintf("SetUniform: Unexpected type %T!\n", x))
+			case int:
+				gl.Uniform1i(loc, gl.Int(x))
+			case float32:
+				gl.Uniform1f(loc, gl.Float(x))
+			case vmath.Vector4:
+				gl.Uniform4f(loc, gl.Float(x.X), gl.Float(x.Y), gl.Float(x.Z), gl.Float(x.W))
+			case vmath.Matrix4:
+				s.setM4Uniform(loc, &x)
+			}
+		}
+	})
 }
 
 func (s *Shader) printShaderLog(obj gl.Uint) {

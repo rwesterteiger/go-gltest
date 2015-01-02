@@ -3,6 +3,7 @@ package buffers
 import (
 	gl "github.com/rwesterteiger/gogl/gl32"
 	vmath "github.com/rwesterteiger/vectormath"
+	"fmt"
 )
 
 type VBO struct {
@@ -110,8 +111,25 @@ func (vao *VAO) Draw() {
 	defer vao.unbind()
 
 	if vao.idxBufferHandle != 0 {
+		if gl.GetError() != gl.NO_ERROR {
+			panic("drawelements before")
+		}
 		gl.DrawElements(vao.primitiveType, vao.nElements, gl.UNSIGNED_INT, nil)
+
+		err := gl.GetError()
+		if err!= gl.NO_ERROR {
+			fmt.Println(err)
+			panic("drawelements after")
+		}
 	} else {
+
+		if gl.GetError() != gl.NO_ERROR {
+			panic("DrawArrays before")
+		}
 		gl.DrawArrays(vao.primitiveType, 0, vao.nElements)
+
+		if gl.GetError() != gl.NO_ERROR {
+			panic("DrawArrays after")
+		}
 	}
 }

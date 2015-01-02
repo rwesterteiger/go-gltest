@@ -36,6 +36,10 @@ const ambientLightFragShaderSrc = `
 	}
 `
 
+type ambientLightUniforms struct {
+	AlbedoTex int		`glUniform:"albedoTex"`
+}
+
 type AmbientLight struct {
 	shader *shader.Shader
 	fsQuadVAO *buffers.VAO
@@ -81,8 +85,10 @@ func (s *AmbientLight) EndDepthPass() {
 func (s *AmbientLight) Render(gbuf *gbuffer.GBuffer, projMat, viewMat *vmath.Matrix4) {
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, gbuf.GetAlbedoTex())
-	s.shader.ProgramUniform1i(0, 0)
 
+	u := ambientLightUniforms{ AlbedoTex : 0 }
+	s.shader.SetUniforms(&u)
+	
 	s.shader.Enable()
 	s.fsQuadVAO.Draw()
 	s.shader.Disable()
