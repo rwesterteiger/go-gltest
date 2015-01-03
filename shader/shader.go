@@ -8,7 +8,7 @@ import (
 	vmath "github.com/rwesterteiger/vectormath"
 	"strings"
 	"reflect"
-	// "log"
+	"log"
 )
 
 type Shader struct {
@@ -33,8 +33,6 @@ func (s *Shader) AddShaderSource(src string, sType uint32) {
 
 	var success int32
 	gl.GetShaderiv(obj, gl.COMPILE_STATUS, &success)
-
-	fmt.Printf("compile result = %v\n", success)
 
 	if success == 0 {
 		fmt.Println("Error compiling shader:")
@@ -61,8 +59,6 @@ func (s *Shader) Link() {
 
 	var success int32
 	gl.GetProgramiv(s.program, gl.LINK_STATUS, &success)
-
-	fmt.Printf("link result = %v\n", success)
 
 	if success == 0 {
 		fmt.Printf("Error linking shader!")
@@ -160,20 +156,19 @@ func (s *Shader) SetUniforms(uStruct interface{}) {
 			fieldValue := v.Field(i)
 			fieldType  := v.Type().Field(i)
 			tag := fieldType.Tag
-			// f := v.Field(i)
-
-			//fmt.Printf("Field Name: %s,\t Field Value: %v,\t Tag Value: %s\n", fieldType.Name, fieldValue.Interface(), tag.Get("glUniform"))
-
+		
 			uniformName := tag.Get("glUniform")
 
-			if uniformName == "" { // non-tagged field, ignore
-				continue
+			if uniformName == "" {
+				uniformName = fieldType.Name // if there is no `glUniform:"<name>"` tag, use the field name as uniform name
 			}
 
-			// fmt.Printf("setting uniform %v to %v\n", uniformName, fieldValue.Interface())
 			loc := int32(s.GetUniformLocation(uniformName))
-			//fmt.Println(fieldValue.Interface())
 
+			if (loc == -1) {
+				log.Fatal(fmt.Sprintf("Shader.SetUniforms(): Unknown uniform \"%v\"!", uniformName))
+			}
+		
 			switch x := fieldValue.Interface().(type) {
 			default:
 				panic(fmt.Sprintf("SetUniform: Unexpected type %T!\n", x))
@@ -181,6 +176,8 @@ func (s *Shader) SetUniforms(uStruct interface{}) {
 				gl.Uniform1i(loc, int32(x))
 			case float32:
 				gl.Uniform1f(loc, float32(x))
+			case vmath.Vector3:
+				gl.Uniform3f(loc, float32(x.X), float32(x.Y), float32(x.Z))
 			case vmath.Vector4:
 				gl.Uniform4f(loc, float32(x.X), float32(x.Y), float32(x.Z), float32(x.W))
 			case vmath.Matrix4:

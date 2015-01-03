@@ -11,6 +11,21 @@ import (
 	"fmt"
 	
 )
+
+type spotLightShaderUniforms struct {
+	PV 					vmath.Matrix4
+	AlbedoTex 			int
+	NormalTex 			int
+	DepthTex 			int
+	ShadowMapTex 		int
+	LightPosAndAngle 	vmath.Vector4
+	InvP 				vmath.Matrix4
+	ShadowPV 			vmath.Matrix4
+	Color 				vmath.Vector3
+	LightDir 			vmath.Vector3
+}
+
+
 const dbgVtxShaderSrc = `
 	#version 410
 
@@ -66,16 +81,16 @@ const spotLightFragShaderSrc = `
 	layout (location = 0) out vec4 fragData;
 	noperspective in vec2 tcNormalized;
 
-	uniform sampler2D albedoTex;
-	uniform sampler2D normalTex;
-	uniform sampler2D depthTex;
-	uniform sampler2DShadow shadowMapTex;
-	uniform vec4 lightPosAndAngle; // xyz = eyespace pos, w = opening angle
-	uniform mat4 invP; // camera NDC -> viewspace
-	uniform mat4 shadowPV; // camera viewspace --> shadow clipspace
-	uniform vec3 color;
-	uniform mat4 V;
-	uniform vec3 lightDir;
+	uniform sampler2D AlbedoTex;
+	uniform sampler2D NormalTex;
+	uniform sampler2D DepthTex;
+	uniform sampler2DShadow ShadowMapTex;
+	uniform vec4 LightPosAndAngle; // xyz = eyespace pos, w = opening angle
+	uniform mat4 InvP; // camera NDC -> viewspace
+	uniform mat4 ShadowPV; // camera viewspace --> shadow clipspace
+	uniform vec3 Color;
+
+	uniform vec3 LightDir;
 
 	const mat4 bias = mat4(	0.5, 0.0, 0.0, 0.0,
 		               		0.0, 0.5, 0.0, 0.0,
@@ -83,21 +98,21 @@ const spotLightFragShaderSrc = `
         	               	0.5, 0.5, 0.5, 1.0); 
 
 	float getShadowAttenuation(vec3 pos) {
-		vec4 vShadowCoord = bias * shadowPV * vec4(pos, 1);
+		vec4 vShadowCoord = bias * ShadowPV * vec4(pos, 1);
 		vShadowCoord.z -= 0.02;
 
 		float d = 0.0;
 
-		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2(-1,-1));
-		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2( 0,-1));
-		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2( 1,-1));
+		d += textureProjOffset(ShadowMapTex, vShadowCoord, ivec2(-1,-1));
+		d += textureProjOffset(ShadowMapTex, vShadowCoord, ivec2( 0,-1));
+		d += textureProjOffset(ShadowMapTex, vShadowCoord, ivec2( 1,-1));
 
-		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2(-1, 0));
-		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2( 1, 0));
+		d += textureProjOffset(ShadowMapTex, vShadowCoord, ivec2(-1, 0));
+		d += textureProjOffset(ShadowMapTex, vShadowCoord, ivec2( 1, 0));
 
-		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2(-1, 1));
-		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2( 0, 1));
-		d += textureProjOffset(shadowMapTex, vShadowCoord, ivec2( 1, 1));
+		d += textureProjOffset(ShadowMapTex, vShadowCoord, ivec2(-1, 1));
+		d += textureProjOffset(ShadowMapTex, vShadowCoord, ivec2( 0, 1));
+		d += textureProjOffset(ShadowMapTex, vShadowCoord, ivec2( 1, 1));
 
 		d /= 8.0;
 
@@ -107,28 +122,28 @@ const spotLightFragShaderSrc = `
 
 	void main(void)
 	{
-		vec4 diffuseMaterial = texture(albedoTex, tcNormalized);
-		float z = texture(depthTex, tcNormalized).x;
-		vec3 n = texture(normalTex, tcNormalized).xyz; // eyespace normal
+		vec4 diffuseMaterial = texture(AlbedoTex, tcNormalized);
+		float z = texture(DepthTex, tcNormalized).x;
+		vec3  n = texture(NormalTex, tcNormalized).xyz; // eyespace normal
 
 		// determine eye-space position of pixel
-    		vec4 vProjectedPos = 2 * vec4(tcNormalized, z, 1.0) - 1;
-		vec4 pos = invP * vProjectedPos;  
+    	vec4 vProjectedPos = 2 * vec4(tcNormalized, z, 1.0) - 1;
+		vec4 pos = InvP * vProjectedPos;  
 		pos /= pos.w;
 	
-		vec3 L = normalize(pos.xyz - lightPosAndAngle.xyz);
+		vec3 L = normalize(pos.xyz - LightPosAndAngle.xyz);
 		float NdotL = -dot(L, n);
 
 		if (NdotL < 0.0) {
 			discard;
 		}
 
-		float angle = acos(dot(lightDir, L));
-		float attenuation = 1 - smoothstep(lightPosAndAngle.w * 0.7, lightPosAndAngle.w * 0.8, angle);
+		float angle = acos(dot(LightDir, L));
+		float attenuation = 1 - smoothstep(LightPosAndAngle.w * 0.7, LightPosAndAngle.w * 0.8, angle);
 
-		vec4 diffuse = vec4(color, 1) * diffuseMaterial * max(0.0, NdotL);
+		vec4 diffuse = vec4(Color, 1) * diffuseMaterial * max(0.0, NdotL);
 
-		float specStrength = max(0.0, dot(reflect(-lightDir, n), normalize(pos.xyz)));
+		float specStrength = max(0.0, dot(reflect(-LightDir, n), normalize(pos.xyz)));
 		vec4 specular = vec4(1 * pow(specStrength, 16));
 		fragData = getShadowAttenuation(pos.xyz) * attenuation * (diffuse + specular);
 	}
@@ -268,58 +283,57 @@ func (s *SpotLight) EndDepthPass() {
 	s.shadowMap.EndDepthPass()
 }
 
+
 func (s *SpotLight) Render(gbuf *gbuffer.GBuffer, projMat, viewMat *vmath.Matrix4) {
-	var invP vmath.Matrix4
-	vmath.M4Inverse(&invP, projMat)
-	s.shader.ProgramUniformM4(9, &invP)
+
+	if gl.GetError() != gl.NO_ERROR {
+			panic("gl error in spotlight begin render")
+	}
+
+	uniforms := &spotLightShaderUniforms{
+		AlbedoTex    : 0,
+		NormalTex    : 1,
+		DepthTex     : 2,
+		ShadowMapTex : 3,
+		Color        : s.color,
+	}
+
+	vmath.M4Inverse(&uniforms.InvP, projMat)
 
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, gbuf.GetAlbedoTex())
-	s.shader.ProgramUniform1i(0, 0)
 
 	gl.ActiveTexture(gl.TEXTURE1)
 	gl.BindTexture(gl.TEXTURE_2D, gbuf.GetNormalTex())
-	s.shader.ProgramUniform1i(1, 1)
 
 	gl.ActiveTexture(gl.TEXTURE2)
 	gl.BindTexture(gl.TEXTURE_2D, gbuf.GetDepthTex())
-	s.shader.ProgramUniform1i(2, 2)
 
 	gl.ActiveTexture(gl.TEXTURE3)
 	gl.BindTexture(gl.TEXTURE_2D, s.shadowMap.GetDepthTex())
-	s.shader.ProgramUniform1i(3, 3)
 
 	var eyeSpacePos vmath.Vector4
 	vmath.V4MakeFromP3(&eyeSpacePos, &s.pos)
-	vmath.M4MulV4(&eyeSpacePos, viewMat, &eyeSpacePos)
+	vmath.M4MulV4(&uniforms.LightPosAndAngle, viewMat, &eyeSpacePos)
 
-	s.shader.ProgramUniform4f(4, eyeSpacePos.X, eyeSpacePos.Y, eyeSpacePos.Z, s.alpha)
+	vmath.M4Mul(&uniforms.PV, projMat, viewMat)
 
-	var PV vmath.Matrix4
-	vmath.M4Mul(&PV, projMat, viewMat)
-
-	s.shader.ProgramUniformM4(5, &PV)	
 
 
 	var invV vmath.Matrix4
 	vmath.M4Inverse(&invV, viewMat)
-	var shadowMat vmath.Matrix4
-	vmath.M4Mul(&shadowMat, &s.pvMat, &invV)
+	vmath.M4Mul(&uniforms.ShadowPV, &s.pvMat, &invV)
 
-	s.shader.ProgramUniformM4(13, &shadowMat)
-	s.shader.ProgramUniform3f(17, s.color.X, s.color.Y, s.color.Z)
-	s.shader.ProgramUniformM4(18, viewMat)
+	var tmp vmath.Vector4
+	vmath.M4MulV3(&tmp, viewMat, &s.dir) // eye space direction of light
+	vmath.V3MakeFromElems(&uniforms.LightDir, tmp.X, tmp.Y, tmp.Z)
 
-	
-	var eyeSpaceDir vmath.Vector4
-	vmath.M4MulV3(&eyeSpaceDir, viewMat, &s.dir)
-
-	s.shader.ProgramUniform3f(19, eyeSpaceDir.X, eyeSpaceDir.Y, eyeSpaceDir.Z)
-
-
-
+	if gl.GetError() != gl.NO_ERROR {
+			panic("gl error in spotlight end render")
+	}
 	s.shader.Enable()
-	
+	s.shader.SetUniforms(uniforms)
+
 	//s.fsQuadVAO.Draw()
 	s.coneVAO.Draw()
 	s.shader.Disable()
@@ -351,6 +365,9 @@ func (s *SpotLight) Render(gbuf *gbuffer.GBuffer, projMat, viewMat *vmath.Matrix
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 	gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 */
+
+
+
 }
 
 

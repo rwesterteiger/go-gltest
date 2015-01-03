@@ -16,10 +16,10 @@ import (
 )
 
 type objShaderUniforms struct {
-	P 				vmath.Matrix4 	`glUniform:"P"`
-	V 				vmath.Matrix4 	`glUniform:"V"`
-	M 				vmath.Matrix4 	`glUniform:"M"`
-	DiffuseColor 	vmath.Vector4	`glUniform:"diffuseColor"`
+	P 				vmath.Matrix4
+	V 				vmath.Matrix4
+	M 				vmath.Matrix4
+	DiffuseColor 	vmath.Vector4
 }
 
 const objVertexShaderSource = `
@@ -34,12 +34,12 @@ out vec4 vAlbedo;
 uniform mat4 P;
 uniform mat4 V;
 uniform mat4 M;
-uniform vec4 diffuseColor;
+uniform vec4 DiffuseColor;
 		
 void main(void) {
 	gl_Position = P * V * M * vec4(vtx,1);
 	vEyeSpaceNormal = (V * M * vec4(normal, 0)).xyz;
-	vAlbedo = diffuseColor;
+	vAlbedo = DiffuseColor;
 }
 `
 

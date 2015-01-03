@@ -284,14 +284,19 @@ func main() {
 	var blenderToGLXForm vmath.Transform3
 	vmath.T3MakeFromCols(&blenderToGLXForm, &vmath.Vector3{1, 0, 0}, &vmath.Vector3{0, 1, 0}, &vmath.Vector3{0, 0, 1}, &vmath.Vector3{0, 0, 0})
 
+	// var objRotation vmath.Transform3
+	// vmath.T3MakeRotationX(&objRotation, 2.2)
+
 	var objTranslation vmath.Transform3
-	vmath.T3MakeTranslation(&objTranslation, &vmath.Vector3{0, 0.25, 0})
+	vmath.T3MakeTranslation(&objTranslation, &vmath.Vector3{0, 1.0, 0})
 
 	var modelMatrixMonkey vmath.Matrix4
-	vmath.M4MakeFromT3(&modelMatrixMonkey, &objTranslation)
+	vmath.M4MakeIdentity(&modelMatrixMonkey)
+	// vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &objRotation)
+	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &objTranslation)
 	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &blenderToGLXForm)
 
-	monkey := geom.LoadOBJ("monkey.obj", &vmath.Vector4{1, 0, 0, 1})
+	monkey := geom.LoadOBJ("monkey.obj", &vmath.Vector4{1, 1, 1, 1})
 	monkey.SetModelMatrix(&modelMatrixMonkey)
 	scene.AddObject(monkey)
 
@@ -299,7 +304,7 @@ func main() {
 	vmath.T3MakeTranslation(&monkeyArrayTrans, &vmath.Vector3{0, 0, -2})
 	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &monkeyArrayTrans)
 
-	monkey = geom.LoadOBJ("monkey.obj", &vmath.Vector4{0, 1, 0, 1})
+	monkey = geom.LoadOBJ("monkey.obj", &vmath.Vector4{1, 1, 1, 1})
 	monkey.SetModelMatrix(&modelMatrixMonkey)
 	scene.AddObject(monkey)
 
@@ -307,7 +312,7 @@ func main() {
 	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &monkeyArrayTrans)
 
 	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &monkeyArrayTrans)
-	monkey = geom.LoadOBJ("monkey.obj", &vmath.Vector4{0, 0, 1, 1})
+	monkey = geom.LoadOBJ("monkey.obj", &vmath.Vector4{1, 1, 1, 1})
 	monkey.SetModelMatrix(&modelMatrixMonkey)
 	scene.AddObject(monkey)
 
@@ -315,11 +320,11 @@ func main() {
 
 	scene.AddLight(lights.MakeAmbientLight())
 	
-	/*
+
 	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 3, -2}, &vmath.Point3{0, 0, -2}, &vmath.Vector3{0, 0, -1}, 2, &vmath.Vector3{0.5, 0, 0}))
 	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 3, 0}, &vmath.Point3{0, 0, 0}, &vmath.Vector3{0, 0, -1}, 2, &vmath.Vector3{0, 0.5, 0}))
 	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 3, 2}, &vmath.Point3{0, 0, 2}, &vmath.Vector3{0, 0, -1}, 2, &vmath.Vector3{0, 0, 0.5}))
-	*/
+	
 
 	//scene.AddLight(lights.MakeSpotLight(&vmath.Point3{2, 2, 2}, &vmath.Point3{0,0.0,0}, &vmath.Vector3{0,0,-1}, 1.5, &vmath.Vector3{0.5,0,0}))
 	//scene.AddLight(lights.MakeSpotLight(&vmath.Point3{-2,2, 2}, &vmath.Point3{0,0.0,0}, &vmath.Vector3{0,0,-1}, 1.5, &vmath.Vector3{0,0.5,0}))
