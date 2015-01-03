@@ -1,14 +1,14 @@
 package shadowmap
 
 import (
-	gl "github.com/rwesterteiger/gogl/gl32"
+	gl "github.com/go-gl/glow/gl-core/4.1/gl"
 	//vmath "github.com/rwesterteiger/vectormath"
 	"log"
 )
 
 type ShadowMap struct {
-	shadowTex gl.Uint 
-	fbo gl.Uint
+	shadowTex uint32 
+	fbo uint32
 }
 
 func Make() (s *ShadowMap) {
@@ -23,7 +23,9 @@ func Make() (s *ShadowMap) {
 
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_BORDER)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_BORDER)
-	borderColor := []gl.Float{ 0, 0, 0, 0 }
+	
+	borderColor := []float32 { 0, 0, 0, 0 }
+
 	gl.TexParameterfv(gl.TEXTURE_2D, gl.TEXTURE_BORDER_COLOR, &(borderColor[0]))
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
 	// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LEQUAL);
@@ -50,7 +52,7 @@ func (s *ShadowMap) Delete() {
 	gl.DeleteFramebuffers(1, &s.fbo)
 }
 
-func (s *ShadowMap) GetDepthTex() gl.Uint {
+func (s *ShadowMap) GetDepthTex() uint32 {
 	return s.shadowTex
 }
 

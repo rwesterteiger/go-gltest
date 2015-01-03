@@ -1,7 +1,7 @@
 package scene
 
 import (
-	gl "github.com/rwesterteiger/gogl/gl32"
+	gl "github.com/go-gl/glow/gl-core/4.1/gl"
 	//"github.com/jteeuwen/glfw"
 	//	"github.com/rwesterteiger/vectormath"
 	"log"
@@ -24,7 +24,7 @@ type objShaderUniforms struct {
 }
 
 const objVertexShaderSource = `
-#version 330
+#version 410
 layout (location = 0) in vec3 vtx;
 layout (location = 1) in vec3 normal;
 
@@ -45,7 +45,7 @@ void main(void) {
 `
 
 const objFragShaderSource = `
-#version 330
+#version 410
 
 #define M_PI (3.14159265358979323846)
 
@@ -77,8 +77,8 @@ type Scene struct {
 	gbuf *gbuffer.GBuffer
 
 	// scene is rendered into this for filtering
-	outputFBO gl.Uint
-	outputTex gl.Uint
+	outputFBO uint32
+	outputTex uint32
 
 	postFilters []post.PostProcessFilter
 
@@ -86,11 +86,11 @@ type Scene struct {
 	blitShader *shader.Shader	
 }
 
-func makeColorFBO(w, h int) (fbo gl.Uint, colorTex gl.Uint) {
+func makeColorFBO(w, h int) (fbo uint32, colorTex uint32) {
 	gl.GenTextures(1, &colorTex)
 
 	gl.BindTexture(gl.TEXTURE_2D, colorTex);
-	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, gl.Sizei(w), gl.Sizei(h), 0, gl.RGBA, gl.FLOAT, nil)
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, int32(w), int32(h), 0, gl.RGBA, gl.FLOAT, nil)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
@@ -101,7 +101,7 @@ func makeColorFBO(w, h int) (fbo gl.Uint, colorTex gl.Uint) {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
 	gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, colorTex, 0)
 	
-	drawBufs := []gl.Enum{ gl.COLOR_ATTACHMENT0 }
+	drawBufs := []uint32{ gl.COLOR_ATTACHMENT0 }
 	gl.DrawBuffers(1, &(drawBufs[0]))
 	
 	result := gl.CheckFramebufferStatus(gl.FRAMEBUFFER)
@@ -147,7 +147,7 @@ func makeFullscreenQuadVAO() (*buffers.VAO) {
 
 func makeBlitShader() (s *shader.Shader) {
 	const vSrc =`
-	#version 330
+	#version 410
 	layout (location = 0) in vec2 vtx;
 	layout (location = 1) in vec2 tc;
 
@@ -160,7 +160,7 @@ func makeBlitShader() (s *shader.Shader) {
 	`
 
 	const fSrc = `
-	#version 330
+	#version 410
 	layout (location = 0) out vec4 fragData;
 	in vec2 vTc;
 
@@ -304,10 +304,10 @@ func (s *Scene) Render() {
 
 	fmt.Printf("scene width=%v height=%v\n", s.w, s.h)
 
-	var vp [4]gl.Int64
-	gl.GetInteger64v(gl.VIEWPORT, &(vp[0]))
+	var vp [4]int32
+	gl.GetIntegerv(gl.VIEWPORT, &(vp[0]))
 	fmt.Printf("viewport: %v\n", vp)
-	gl.Viewport(0,0, gl.Sizei(s.w), gl.Sizei(s.h))
+	gl.Viewport(0,0, int32(s.w), int32(s.h))
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 	
 	gl.ActiveTexture(gl.TEXTURE0)
@@ -316,6 +316,10 @@ func (s *Scene) Render() {
 	u := blitShaderUniforms{ InTex : 0 }
 	s.blitShader.SetUniforms(&u)
 	s.blitShader.Enable()
+
+	// gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
 	s.fsQuadVAO.Draw()
+	// gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
+
 	s.blitShader.Disable()
 }

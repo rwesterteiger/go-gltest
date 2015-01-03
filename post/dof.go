@@ -1,7 +1,7 @@
 package post
 
 import (
-	gl "github.com/rwesterteiger/gogl/gl32"
+	gl "github.com/go-gl/glow/gl-core/4.1/gl"
 	vmath "github.com/rwesterteiger/vectormath"
 	//"log"
 	"github.com/rwesterteiger/go-gltest/shader"
@@ -124,7 +124,7 @@ func (b *DoFFilter) Delete() {
 	b.PostProcessFilterBase.delete()
 }
 
-func (b *DoFFilter) Apply(gbuf *gbuffer.GBuffer, inputTex gl.Uint, P, V *vmath.Matrix4) (outputTex gl.Uint) {
+func (b *DoFFilter) Apply(gbuf *gbuffer.GBuffer, inputTex uint32, P, V *vmath.Matrix4) (outputTex uint32) {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, b.outputFBO)
 	
 	gl.ActiveTexture(gl.TEXTURE0)

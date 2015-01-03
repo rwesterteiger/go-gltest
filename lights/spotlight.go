@@ -7,12 +7,12 @@ import (
 	"github.com/rwesterteiger/go-gltest/gbuffer"
 	vmath "github.com/rwesterteiger/vectormath"
 	"math"
-	gl "github.com/rwesterteiger/gogl/gl32"
+	gl "github.com/go-gl/glow/gl-core/4.1/gl"
 	"fmt"
 	
 )
 const dbgVtxShaderSrc = `
-	#version 330
+	#version 410
 
 	layout (location = 0) in vec3 vtx;
 
@@ -25,7 +25,7 @@ const dbgVtxShaderSrc = `
 `
 
 const dbgFragShaderSrc = `
-	#version 330
+	#version 410
 	
 	layout (location = 0) out vec4 fragData;
 
@@ -45,7 +45,7 @@ const dbgFragShaderSrc = `
 
 
 const spotLightVtxShaderSrc =`
-	#version 330
+	#version 410
 
 	layout (location = 0) in vec3 vtx;
 	// layout (location = 1) in vec2 tc;
@@ -59,7 +59,7 @@ const spotLightVtxShaderSrc =`
 	`
 
 const spotLightFragShaderSrc = `
-	#version 330
+	#version 410
 
 	#define M_PI (3.14159265358979323846)
 

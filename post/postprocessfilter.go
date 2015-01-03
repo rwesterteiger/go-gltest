@@ -1,7 +1,7 @@
 package post
 
 import (
-	gl "github.com/rwesterteiger/gogl/gl32"
+	gl "github.com/go-gl/glow/gl-core/4.1/gl"
 	"github.com/rwesterteiger/go-gltest/gbuffer"
 	"github.com/rwesterteiger/go-gltest/buffers"
 	vmath "github.com/rwesterteiger/vectormath"
@@ -9,15 +9,15 @@ import (
 )
 
 type PostProcessFilter interface {
-	Apply(gbuf *gbuffer.GBuffer, inputTex gl.Uint, P, V *vmath.Matrix4) (outputTex gl.Uint)
+	Apply(gbuf *gbuffer.GBuffer, inputTex uint32, P, V *vmath.Matrix4) (outputTex uint32)
 	Delete()
 }
 
 type PostProcessFilterBase struct {
 	w, h int
 
-	outputFBO gl.Uint
-	outputTex gl.Uint
+	outputFBO uint32
+	outputTex uint32
 	fsQuadVAO *buffers.VAO
 }
 
@@ -56,7 +56,7 @@ func (f *PostProcessFilterBase) init(w, h int) {
 	gl.GenTextures(1, &f.outputTex)
 
 	gl.BindTexture(gl.TEXTURE_2D, f.outputTex);
-	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, gl.Sizei(w), gl.Sizei(h), 0, gl.RGBA, gl.FLOAT, nil)
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, int32(w), int32(h), 0, gl.RGBA, gl.FLOAT, nil)
 	setTexParameters()
 
 	gl.BindTexture(gl.TEXTURE_2D, 0)
@@ -65,7 +65,7 @@ func (f *PostProcessFilterBase) init(w, h int) {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, f.outputFBO)
 	gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, f.outputTex, 0)
 	
-	drawBufs := []gl.Enum{ gl.COLOR_ATTACHMENT0 }
+	drawBufs := []uint32{ gl.COLOR_ATTACHMENT0 }
 	gl.DrawBuffers(1, &(drawBufs[0]))
 
 	checkFramebuffer()

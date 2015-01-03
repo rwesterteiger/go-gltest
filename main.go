@@ -1,7 +1,7 @@
 package main
 
 import (
-	gl "github.com/rwesterteiger/gogl/gl32"
+	gl "github.com/go-gl/glow/gl-core/4.1/gl"
 	glfw "github.com/go-gl/glfw3"
 	//	"github.com/rwesterteiger/vectormath"
 	"fmt"
@@ -246,8 +246,8 @@ func main() {
 
 	fmt.Printf("init done\n")
 
-	glfw.WindowHint(glfw.ContextVersionMajor, 3)
-	glfw.WindowHint(glfw.ContextVersionMinor, 2)
+	glfw.WindowHint(glfw.ContextVersionMajor, 4)
+	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 	glfw.WindowHint(glfw.OpenglForwardCompatible, gl.TRUE)
 	glfw.WindowHint(glfw.OpenglProfile, glfw.OpenglCoreProfile)
 //glfw.OpenWindowHint(glfw.WindowNoResize, 1)

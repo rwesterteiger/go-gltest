@@ -1,17 +1,17 @@
 package gbuffer
 
 import (
-	gl "github.com/rwesterteiger/gogl/gl32"
+	gl "github.com/go-gl/glow/gl-core/4.1/gl"
 	//vmath "github.com/rwesterteiger/vectormath"
 	"log"
 )
 
 type GBuffer struct {
-	w,h gl.Sizei
-	fbo gl.Uint
-	albedoTex gl.Uint
-	normalTex gl.Uint
-	depthTex gl.Uint
+	w,h int32
+	fbo uint32
+	albedoTex uint32
+	normalTex uint32
+	depthTex uint32
 }
 
 func setTexParameters() {
@@ -24,8 +24,8 @@ func setTexParameters() {
 func Make(w,h int) (g *GBuffer) {
 	g = new(GBuffer)
 	
-	g.w = gl.Sizei(w)
-	g.h = gl.Sizei(h)
+	g.w = int32(w)
+	g.h = int32(h)
 
 	gl.GenTextures(1, &g.albedoTex)
 	gl.GenTextures(1, &g.normalTex)
@@ -51,7 +51,7 @@ func Make(w,h int) (g *GBuffer) {
 	gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, g.normalTex, 0)
 	gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, g.depthTex, 0)
 	
-	drawBufs := []gl.Enum{ gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1 }
+	drawBufs := []uint32{ gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1 }
 	gl.DrawBuffers(2, &(drawBufs[0]))
 
 	result := gl.CheckFramebufferStatus(gl.FRAMEBUFFER)
@@ -81,15 +81,15 @@ func (_ *GBuffer) End() {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 }
 
-func (g *GBuffer) GetAlbedoTex() gl.Uint {
+func (g *GBuffer) GetAlbedoTex() uint32 {
 	return g.albedoTex
 }
 
-func (g *GBuffer) GetNormalTex() gl.Uint {
+func (g *GBuffer) GetNormalTex() uint32 {
 	return g.normalTex
 }
 
-func (g *GBuffer) GetDepthTex() gl.Uint {
+func (g *GBuffer) GetDepthTex() uint32 {
 	return g.depthTex
 }
 

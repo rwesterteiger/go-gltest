@@ -5,12 +5,12 @@ import (
 	"github.com/rwesterteiger/go-gltest/buffers"
 	"github.com/rwesterteiger/go-gltest/gbuffer"
 	vmath "github.com/rwesterteiger/vectormath"
-	gl "github.com/rwesterteiger/gogl/gl32"
+	gl "github.com/go-gl/glow/gl-core/4.1/gl"
 	"fmt"
 )
 
 const ambientLightVtxShaderSrc =`
-	#version 330
+	#version 410
 
 	layout (location = 0) in vec3 vtx;
 	noperspective out vec2 tc;
@@ -22,7 +22,7 @@ const ambientLightVtxShaderSrc =`
 	`
 
 const ambientLightFragShaderSrc = `
-	#version 330
+	#version 410
 
 	#define M_PI (3.14159265358979323846)
 

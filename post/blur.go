@@ -1,7 +1,7 @@
 package post
 
 import (
-	gl "github.com/rwesterteiger/gogl/gl32"
+	gl "github.com/go-gl/glow/gl-core/4.1/gl"
 	vmath "github.com/rwesterteiger/vectormath"
 	//"log"
 	"github.com/rwesterteiger/go-gltest/shader"
@@ -10,7 +10,7 @@ import (
 )
 
 const vtxShaderSrc =`
-	#version 330
+	#version 410
 	layout (location = 0) in vec2 vtx;
 	noperspective out vec2 vTc;
 
@@ -21,7 +21,7 @@ const vtxShaderSrc =`
 	`
 
 const downSampleFragShaderSrc = `
-	#version 330
+	#version 410
 	layout (location = 0) out vec4 fragData;
 
 	uniform sampler2D inputTex;
@@ -41,7 +41,7 @@ const downSampleFragShaderSrc = `
 	`
 
 const blurXFragShaderSrc = `
-	#version 330
+	#version 410
 	layout (location = 0) out vec4 fragData;
 
 	uniform sampler2D inputTex;
@@ -67,7 +67,7 @@ const blurXFragShaderSrc = `
 
 
 const blurYFragShaderSrc = `
-	#version 330
+	#version 410
 	layout (location = 0) out vec4 fragData;
 
 	uniform sampler2D inputTex;
@@ -114,7 +114,7 @@ const blurYFragShaderSrc = `
 27.}
 */
 const blendFragShaderSrc = `
-	#version 330
+	#version 410
 	noperspective in vec2 vTc;
 
 	layout (location = 0) out vec4 fragData;
@@ -154,8 +154,8 @@ const blendFragShaderSrc = `
 type BlurFilter struct {
 	PostProcessFilterBase
 
-	blurFBOs [2]gl.Uint
-	blurTexs [2]gl.Uint
+	blurFBOs [2]uint32
+	blurTexs [2]uint32
 
 	downSampleShader *shader.Shader
 	blurXShader *shader.Shader
@@ -178,7 +178,7 @@ func MakeBlurFilter(w, h int) (b *BlurFilter) {
 		gl.GenTextures(1, &(b.blurTexs[i]))
 
 		gl.BindTexture(gl.TEXTURE_2D, b.blurTexs[i]);
-		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, gl.Sizei(w) / 4, gl.Sizei(h) / 4, 0, gl.RGBA, gl.FLOAT, nil)
+		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, int32(w) / 4, int32(h) / 4, 0, gl.RGBA, gl.FLOAT, nil)
 		setTexParameters()
 
 	
@@ -188,7 +188,7 @@ func MakeBlurFilter(w, h int) (b *BlurFilter) {
 		gl.BindFramebuffer(gl.FRAMEBUFFER, b.blurFBOs[i])
 		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, b.blurTexs[i], 0)
 	
-		drawBufs := []gl.Enum{ gl.COLOR_ATTACHMENT0 }
+		drawBufs := []uint32{ gl.COLOR_ATTACHMENT0 }
 		gl.DrawBuffers(1, &(drawBufs[0]))
 
 		checkFramebuffer()
@@ -228,7 +228,7 @@ func (b *BlurFilter) Delete() {
 /*
 func (b *BlurFilter) BeginRender() {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, b.inputFBO)
-	gl.Viewport(0,0, gl.Sizei(b.w), gl.Sizei(b.h))
+	gl.Viewport(0,0, int32(b.w), int32(b.h))
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 }
 
@@ -237,7 +237,7 @@ func (b *BlurFilter) EndRender() {
 }
 */
 
-func (b *BlurFilter) Apply(gbuf *gbuffer.GBuffer, inputTex gl.Uint, P, V *vmath.Matrix4) (outputTex gl.Uint) {
+func (b *BlurFilter) Apply(gbuf *gbuffer.GBuffer, inputTex uint32, P, V *vmath.Matrix4) (outputTex uint32) {
 	panic("blur filter disabled")
 	
 	gl.BindFramebuffer(gl.FRAMEBUFFER, b.blurFBOs[0])
@@ -299,7 +299,7 @@ func (b *BlurFilter) Apply(gbuf *gbuffer.GBuffer, inputTex gl.Uint, P, V *vmath.
 
 /*
 	gl.BindFramebuffer(gl.DRAW_FRAMEBUFFER, 0) // keep reading from b.blurFBOs[1] but write to default FBO
-	gl.BlitFramebuffer(0, 0, gl.Int(b.w/4), gl.Int(b.h/4), 0, 0, gl.Int(b.w), gl.Int(b.h), gl.COLOR_BUFFER_BIT, gl.LINEAR)
+	gl.BlitFramebuffer(0, 0, int32(b.w/4), int32(b.h/4), 0, 0, int32(b.w), int32(b.h), gl.COLOR_BUFFER_BIT, gl.LINEAR)
 */
 
 }

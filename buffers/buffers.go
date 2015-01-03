@@ -1,14 +1,14 @@
 package buffers
 
 import (
-	gl "github.com/rwesterteiger/gogl/gl32"
+	gl "github.com/go-gl/glow/gl-core/4.1/gl"
 	vmath "github.com/rwesterteiger/vectormath"
 	"fmt"
 )
 
 type VBO struct {
-	handle gl.Uint
-	nComponents gl.Int
+	handle uint32
+	nComponents int32
 }
 
 func MakeVBOFromVec3s(vecs []vmath.Vector3) (vbo *VBO) {
@@ -25,7 +25,7 @@ func MakeVBOFromVec3s(vecs []vmath.Vector3) (vbo *VBO) {
 		floatData[3*i + 2] = vecs[i].Z
 	}
 
-	gl.BufferData(gl.ARRAY_BUFFER, gl.Sizeiptr(4 * len(floatData)), gl.Pointer(&floatData[0]), gl.STATIC_DRAW)
+	gl.BufferData(gl.ARRAY_BUFFER, 4 * len(floatData), gl.Ptr(&floatData[0]), gl.STATIC_DRAW)
 
 	return
 }
@@ -44,7 +44,7 @@ func MakeVBOFromVec2s(vecs []vmath.Vector2) (vbo *VBO) {
 		floatData[2*i + 1] = vecs[i].Y
 	}
 
-	gl.BufferData(gl.ARRAY_BUFFER, gl.Sizeiptr(4 * len(floatData)), gl.Pointer(&floatData[0]), gl.STATIC_DRAW)
+	gl.BufferData(gl.ARRAY_BUFFER, 4 * len(floatData), gl.Ptr(&floatData[0]), gl.STATIC_DRAW)
 
 	return
 }
@@ -53,22 +53,22 @@ func (vbo *VBO) Delete() {
 	gl.DeleteBuffers(1, &vbo.handle)
 }
 
-func (vbo *VBO) vertexAttribPointer(idx gl.Uint) {
+func (vbo *VBO) vertexAttribPointer(idx uint32) {
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo.handle)
 	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 
-	gl.VertexAttribPointer(idx, vbo.nComponents, gl.FLOAT, gl.TRUE, 0, nil)	
+	gl.VertexAttribPointer(idx, vbo.nComponents, gl.FLOAT, true, 0, nil)	
 }
 
 type VAO struct {
-	primitiveType gl.Enum
-	nElements gl.Sizei
-	handle gl.Uint
-	idxBufferHandle gl.Uint
+	primitiveType uint32
+	nElements int32
+	handle uint32
+	idxBufferHandle uint32
 }
 
-func MakeVAO(primitiveType gl.Enum, nElements int) (*VAO) {
-	vao := &VAO{primitiveType : primitiveType, nElements : gl.Sizei(nElements) }
+func MakeVAO(primitiveType uint32, nElements int) (*VAO) {
+	vao := &VAO{primitiveType : primitiveType, nElements : int32(nElements) }
 
 	gl.GenVertexArrays(1, &vao.handle)
 
@@ -79,7 +79,7 @@ func (vao *VAO) Delete() {
 	gl.DeleteBuffers(1, &vao.idxBufferHandle)
 }
 
-func (vao *VAO) AttachVBO(vtxAttributeIdx gl.Uint, vbo *VBO) {
+func (vao *VAO) AttachVBO(vtxAttributeIdx uint32, vbo *VBO) {
 	vao.bind()
 	defer vao.unbind()
 	
@@ -95,7 +95,7 @@ func (vao *VAO) SetIndexBuffer(indices []uint32) {
 	defer vao.unbind()
 
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, vao.idxBufferHandle)
-	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(4 * len(indices)), gl.Pointer(&indices[0]), gl.STATIC_DRAW)
+	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 4 * len(indices), gl.Ptr(&indices[0]), gl.STATIC_DRAW)
 }
 	
 func (vao *VAO) bind() {
