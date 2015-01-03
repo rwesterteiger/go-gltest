@@ -4,7 +4,7 @@ import (
 	"C"
 	"unsafe"
 	"fmt"
-	gl "github.com/go-gl/glow/gl-core/4.1/gl"
+	"github.com/go-gl/glow/gl-core/4.1/gl"
 	vmath "github.com/rwesterteiger/vectormath"
 	"strings"
 	"reflect"

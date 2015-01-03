@@ -1,7 +1,7 @@
 package main
 
 import (
-	gl "github.com/go-gl/glow/gl-core/4.1/gl"
+	"github.com/go-gl/glow/gl-core/4.1/gl"
 	glfw "github.com/go-gl/glfw3"
 	//	"github.com/rwesterteiger/vectormath"
 	"fmt"

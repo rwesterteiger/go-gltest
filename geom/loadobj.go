@@ -1,6 +1,6 @@
 package geom
 import (
-	gl "github.com/go-gl/glow/gl-core/4.1/gl"
+	"github.com/go-gl/glow/gl-core/4.1/gl"
 	"log"
 	"github.com/rwesterteiger/go-gltest/buffers"
 	"strings"

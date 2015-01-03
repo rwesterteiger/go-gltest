@@ -5,8 +5,7 @@ import (
 	"github.com/rwesterteiger/go-gltest/buffers"
 	"github.com/rwesterteiger/go-gltest/gbuffer"
 	vmath "github.com/rwesterteiger/vectormath"
-	gl "github.com/go-gl/glow/gl-core/4.1/gl"
-	"fmt"
+	"github.com/go-gl/glow/gl-core/4.1/gl"
 )
 
 const ambientLightVtxShaderSrc =`
@@ -85,7 +84,6 @@ func (s *AmbientLight) EndDepthPass() {
 }
 
 func (s *AmbientLight) Render(gbuf *gbuffer.GBuffer, projMat, viewMat *vmath.Matrix4) {
-	fmt.Printf("rendering ambient light\n")
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, gbuf.GetAlbedoTex())
 

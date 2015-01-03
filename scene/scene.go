@@ -1,11 +1,10 @@
 package scene
 
 import (
-	gl "github.com/go-gl/glow/gl-core/4.1/gl"
+	"github.com/go-gl/glow/gl-core/4.1/gl"
 	//"github.com/jteeuwen/glfw"
 	//	"github.com/rwesterteiger/vectormath"
 	"log"
-	"fmt"
 	//"github.com/rwesterteiger/go-gltest/buffers"
 	"github.com/rwesterteiger/go-gltest/geom"
 	"github.com/rwesterteiger/go-gltest/shader"
@@ -134,7 +133,7 @@ func Make(w, h int) (s *Scene) {
 
 func makeFullscreenQuadVAO() (*buffers.VAO) {
 	vtxs := buffers.MakeVBOFromVec2s([]vmath.Vector2{ {-1, -1}, {1, -1}, {1, 1}, {-1, 1} })
-	tcs := buffers.MakeVBOFromVec2s([]vmath.Vector2{ { 0,0 }, {0,0}, {1,1}, {0,1} })
+	tcs := buffers.MakeVBOFromVec2s([]vmath.Vector2{ { 0,0 }, {1,0}, {1,1}, {0,1} })
 	indices := []uint32{ 0, 1, 2, 2, 3, 0 }
 
 	vao := buffers.MakeVAO(gl.TRIANGLES, 6)
@@ -267,12 +266,14 @@ func (s *Scene) Render() {
 
 	gl.ClearColor(0,0,0,0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
 	s.doRender(&s.camProjMat, &s.camViewMat)
+	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 
 	s.gbuf.End()
 
 	gl.BindFramebuffer(gl.FRAMEBUFFER, s.outputFBO)
-	fmt.Printf("scene width=%v height=%v\n", s.w, s.h)
 
 	gl.ClearColor(0,0,0,0);
 	gl.Clear(gl.COLOR_BUFFER_BIT)
@@ -302,11 +303,6 @@ func (s *Scene) Render() {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 	gl.ClearColor(0,1,0,0)
 
-	fmt.Printf("scene width=%v height=%v\n", s.w, s.h)
-
-	var vp [4]int32
-	gl.GetIntegerv(gl.VIEWPORT, &(vp[0]))
-	fmt.Printf("viewport: %v\n", vp)
 	gl.Viewport(0,0, int32(s.w), int32(s.h))
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 	
@@ -317,9 +313,7 @@ func (s *Scene) Render() {
 	s.blitShader.SetUniforms(&u)
 	s.blitShader.Enable()
 
-	// gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
 	s.fsQuadVAO.Draw()
-	// gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 
 	s.blitShader.Disable()
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/rwesterteiger/go-gltest/gbuffer"
 	vmath "github.com/rwesterteiger/vectormath"
 	"math"
-	gl "github.com/go-gl/glow/gl-core/4.1/gl"
+	"github.com/go-gl/glow/gl-core/4.1/gl"
 	"fmt"
 	
 )

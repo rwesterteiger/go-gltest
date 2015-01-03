@@ -1,7 +1,7 @@
 package post
 
 import (
-	gl "github.com/go-gl/glow/gl-core/4.1/gl"
+	"github.com/go-gl/glow/gl-core/4.1/gl"
 	"github.com/rwesterteiger/go-gltest/gbuffer"
 	"github.com/rwesterteiger/go-gltest/buffers"
 	vmath "github.com/rwesterteiger/vectormath"
