@@ -238,6 +238,8 @@ func (b *BlurFilter) EndRender() {
 */
 
 func (b *BlurFilter) Apply(gbuf *gbuffer.GBuffer, inputTex gl.Uint, P, V *vmath.Matrix4) (outputTex gl.Uint) {
+	panic("blur filter disabled")
+	
 	gl.BindFramebuffer(gl.FRAMEBUFFER, b.blurFBOs[0])
 	
 	gl.ActiveTexture(gl.TEXTURE0)

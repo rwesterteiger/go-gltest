@@ -51,7 +51,7 @@ void main(void)
 `
 
 func makePlaneVAO() *buffers.VAO {
-	vtxs := buffers.MakeVBOFromVec3s([]vmath.Vector3{{-1000, 0, 1000}, {1000, 0, 1000}, {1000, 0, -1000}, {-1000, 0, -1000}})
+	vtxs := buffers.MakeVBOFromVec3s([]vmath.Vector3{{-10, 0, 10}, {10, 0, 10}, {10, 0, -10}, {-10, 0, -10}})
 	normals := buffers.MakeVBOFromVec3s([]vmath.Vector3{{0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}})
 	indices := []uint32{0, 1, 2, 2, 3, 0}
 
@@ -271,14 +271,16 @@ func main() {
 	//ambientBlitShader := makeAmbientBlitShader()
 	//fsQuadVAO := makeFullscreenQuadVAO()
 
-	scene := scene.Make(Width, Height)
+	fbWidth, fbHeight := win.GetFramebufferSize()
+
+	scene := scene.Make(fbWidth, fbHeight)
 	defer scene.Delete()
 
-	var zNear float32 = 0.1
+	var zNear float32 = 0.01
 	var zFar float32 = 100.0
-	scene.SetCameraPerspective(60.0/360.0*2*math.Pi, float32(Width)/float32(Height), zNear, zFar)
+	scene.SetCameraPerspective(60.0/360.0*2*math.Pi, float32(fbWidth)/float32(fbHeight), zNear, zFar)
 
-/*
+
 	var blenderToGLXForm vmath.Transform3
 	vmath.T3MakeFromCols(&blenderToGLXForm, &vmath.Vector3{1, 0, 0}, &vmath.Vector3{0, 1, 0}, &vmath.Vector3{0, 0, 1}, &vmath.Vector3{0, 0, 0})
 
@@ -289,7 +291,7 @@ func main() {
 	vmath.M4MakeFromT3(&modelMatrixMonkey, &objTranslation)
 	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &blenderToGLXForm)
 
-	monkey := geom.LoadOBJ("monkey.obj", &vmath.Vector4{1, 1, 1, 1})
+	monkey := geom.LoadOBJ("monkey.obj", &vmath.Vector4{1, 0, 0, 1})
 	monkey.SetModelMatrix(&modelMatrixMonkey)
 	scene.AddObject(monkey)
 
@@ -297,7 +299,7 @@ func main() {
 	vmath.T3MakeTranslation(&monkeyArrayTrans, &vmath.Vector3{0, 0, -2})
 	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &monkeyArrayTrans)
 
-	monkey = geom.LoadOBJ("monkey.obj", &vmath.Vector4{1, 1, 1, 1})
+	monkey = geom.LoadOBJ("monkey.obj", &vmath.Vector4{0, 1, 0, 1})
 	monkey.SetModelMatrix(&modelMatrixMonkey)
 	scene.AddObject(monkey)
 
@@ -305,13 +307,14 @@ func main() {
 	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &monkeyArrayTrans)
 
 	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &monkeyArrayTrans)
-	monkey = geom.LoadOBJ("monkey.obj", &vmath.Vector4{1, 1, 1, 1})
+	monkey = geom.LoadOBJ("monkey.obj", &vmath.Vector4{0, 0, 1, 1})
 	monkey.SetModelMatrix(&modelMatrixMonkey)
 	scene.AddObject(monkey)
-*/
+
 	scene.AddObject(geom.MakeObject(makePlaneVAO(), &vmath.Vector4{1, 1, 1, 1}))
 
 	scene.AddLight(lights.MakeAmbientLight())
+	
 	/*
 	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 3, -2}, &vmath.Point3{0, 0, -2}, &vmath.Vector3{0, 0, -1}, 2, &vmath.Vector3{0.5, 0, 0}))
 	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 3, 0}, &vmath.Point3{0, 0, 0}, &vmath.Vector3{0, 0, -1}, 2, &vmath.Vector3{0, 0.5, 0}))
@@ -322,10 +325,10 @@ func main() {
 	//scene.AddLight(lights.MakeSpotLight(&vmath.Point3{-2,2, 2}, &vmath.Point3{0,0.0,0}, &vmath.Vector3{0,0,-1}, 1.5, &vmath.Vector3{0,0.5,0}))
 	//scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 2,-2}, &vmath.Point3{0,0.0,0}, &vmath.Vector3{0,0,-1}, 1.5, &vmath.Vector3{0,0,0.5}))
 
-	//dofFilter := post.MakeDoFFilter(Width, Height, 3.4)
+	//dofFilter := post.MakeDoFFilter(fbWidth, fbHeight, 3.4)
 	//scene.AddPostFilter(dofFilter)
 
-	//blurFilter := post.MakeBlurFilter(Width, Height)
+	//blurFilter := post.MakeBlurFilter(fbWidth, fbHeight)
 	//scene.AddPostFilter(blurFilter)
 
 	var t float32 = 0.0
@@ -346,10 +349,10 @@ func main() {
 			startTime = thisFrameTime
 		}
 
-		camX := float32(-3 * math.Sin(float64(t)))
-		camZ := 0.7 + float32(-3*math.Cos(float64(t)))
+		camX := float32(-6 * math.Sin(float64(t)))
+		camZ := 0.7 + float32(-6*math.Cos(float64(t)))
 
-		scene.SetCameraLookAt(&vmath.Point3{camX, 2, camZ}, &vmath.Point3{0, 0.6, 0.7}, &vmath.Vector3{0, 1, 0})
+		scene.SetCameraLookAt(&vmath.Point3{camX, 3, camZ}, &vmath.Point3{0, 0.6, 0.7}, &vmath.Vector3{0, 1, 0})
 
 		gl.ClearColor(0,0,0.3,0)
 		gl.Clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
@@ -405,7 +408,7 @@ func main() {
 
 		// t = 16.4
 
-		//t = t + 0.03 / 360.0 * 2 * math.Pi
+		t = t + 0.9 / 360.0 * 2 * math.Pi
 		win.SwapBuffers()
 		glfw.PollEvents()
 		frameCount++

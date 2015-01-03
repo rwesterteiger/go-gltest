@@ -6,6 +6,7 @@ import (
 	"github.com/rwesterteiger/go-gltest/gbuffer"
 	vmath "github.com/rwesterteiger/vectormath"
 	gl "github.com/rwesterteiger/gogl/gl32"
+	"fmt"
 )
 
 const ambientLightVtxShaderSrc =`
@@ -33,6 +34,7 @@ const ambientLightFragShaderSrc = `
 	void main(void)
 	{
 		fragData = 0.2 * texture(albedoTex, tc);
+		// fragData = vec4(1,1,1,1);
 	}
 `
 
@@ -83,6 +85,7 @@ func (s *AmbientLight) EndDepthPass() {
 }
 
 func (s *AmbientLight) Render(gbuf *gbuffer.GBuffer, projMat, viewMat *vmath.Matrix4) {
+	fmt.Printf("rendering ambient light\n")
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, gbuf.GetAlbedoTex())
 

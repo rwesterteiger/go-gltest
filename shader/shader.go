@@ -173,6 +173,7 @@ func (s *Shader) SetUniforms(uStruct interface{}) {
 				continue
 			}
 
+			// fmt.Printf("setting uniform %v to %v\n", uniformName, fieldValue.Interface())
 			loc := gl.Int(s.GetUniformLocation(uniformName))
 			//fmt.Println(fieldValue.Interface())
 

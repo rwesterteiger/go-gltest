@@ -5,6 +5,7 @@ import (
 	//"github.com/jteeuwen/glfw"
 	//	"github.com/rwesterteiger/vectormath"
 	"log"
+	"fmt"
 	//"github.com/rwesterteiger/go-gltest/buffers"
 	"github.com/rwesterteiger/go-gltest/geom"
 	"github.com/rwesterteiger/go-gltest/shader"
@@ -16,11 +17,10 @@ import (
 )
 
 type objShaderUniforms struct {
-	P 				vmath.Matrix4 	`glUniform:"mat4"`
+	P 				vmath.Matrix4 	`glUniform:"P"`
 	V 				vmath.Matrix4 	`glUniform:"V"`
-	M 				vmath.Matrix4 	`glUniform:"V"`
+	M 				vmath.Matrix4 	`glUniform:"M"`
 	DiffuseColor 	vmath.Vector4	`glUniform:"diffuseColor"`
-	
 }
 
 const objVertexShaderSource = `
@@ -115,7 +115,7 @@ func makeColorFBO(w, h int) (fbo gl.Uint, colorTex gl.Uint) {
 }
 
 func Make(w, h int) (s *Scene) {
-	s = new(Scene)
+	s = &Scene{ w : w, h : h }
 
 	vmath.M4MakeIdentity(&s.camProjMat)
 	vmath.M4MakeIdentity(&s.camViewMat)
@@ -125,8 +125,8 @@ func Make(w, h int) (s *Scene) {
 	s.objShader.AddShaderSource(objFragShaderSource, gl.FRAGMENT_SHADER)
 	s.objShader.Link()
 
-	s.gbuf = gbuffer.Make(w,h)
-	s.outputFBO, s.outputTex = makeColorFBO(w,h)
+	s.gbuf = gbuffer.Make(s.w, s.h)
+	s.outputFBO, s.outputTex = makeColorFBO(s.w, s.h)
 	s.fsQuadVAO = makeFullscreenQuadVAO()
 	s.blitShader = makeBlitShader()
 	return
@@ -134,7 +134,7 @@ func Make(w, h int) (s *Scene) {
 
 func makeFullscreenQuadVAO() (*buffers.VAO) {
 	vtxs := buffers.MakeVBOFromVec2s([]vmath.Vector2{ {-1, -1}, {1, -1}, {1, 1}, {-1, 1} })
-	tcs := buffers.MakeVBOFromVec2s([]vmath.Vector2{ { 0,0 }, {1,0}, {1,1}, {0,1} })
+	tcs := buffers.MakeVBOFromVec2s([]vmath.Vector2{ { 0,0 }, {0,0}, {1,1}, {0,1} })
 	indices := []uint32{ 0, 1, 2, 2, 3, 0 }
 
 	vao := buffers.MakeVAO(gl.TRIANGLES, 6)
@@ -169,6 +169,7 @@ func makeBlitShader() (s *shader.Shader) {
 	void main(void)
 	{
 		fragData = texture(inTex, vTc);
+		//fragData = vec4(vTc.x, vTc.y, 0, 0);
 	}
 	`
 
@@ -249,7 +250,6 @@ func (s *Scene) doRender(P, V *vmath.Matrix4) {
 }
 
 func (s *Scene) Render() {
-
 	gl.Enable(gl.CULL_FACE)
 	gl.CullFace(gl.BACK)
 
@@ -267,20 +267,20 @@ func (s *Scene) Render() {
 
 	gl.ClearColor(0,0,0,0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
-	gl.ClearColor(0,1,0,0)
 	s.doRender(&s.camProjMat, &s.camViewMat)
 
 	s.gbuf.End()
 
 	gl.BindFramebuffer(gl.FRAMEBUFFER, s.outputFBO)
+	fmt.Printf("scene width=%v height=%v\n", s.w, s.h)
+
 	gl.ClearColor(0,0,0,0);
 	gl.Clear(gl.COLOR_BUFFER_BIT)
-	gl.ClearColor(0,1,1,0);
 
 	gl.Disable(gl.DEPTH_TEST)
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.ONE, gl.ONE)
+
 
 	for _, l := range s.lights {
 		l.Render(s.gbuf, &s.camProjMat, &s.camViewMat)
@@ -288,18 +288,28 @@ func (s *Scene) Render() {
 
 
 	gl.Disable(gl.BLEND)
+
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
-	tex := s.outputTex
 
 	// apply post processing filters
-/*
+	tex := s.outputTex
+
 	for _, f := range s.postFilters {
 		tex = f.Apply(s.gbuf, tex, &s.camProjMat, &s.camViewMat) // each filter returns its output texture
 	}
-*/
-	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
+	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+	gl.ClearColor(0,1,0,0)
+
+	fmt.Printf("scene width=%v height=%v\n", s.w, s.h)
+
+	var vp [4]gl.Int64
+	gl.GetInteger64v(gl.VIEWPORT, &(vp[0]))
+	fmt.Printf("viewport: %v\n", vp)
+	gl.Viewport(0,0, gl.Sizei(s.w), gl.Sizei(s.h))
+	gl.Clear(gl.COLOR_BUFFER_BIT)
+	
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, tex)
 
