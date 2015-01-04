@@ -3,18 +3,20 @@ package main
 import (
 	"github.com/go-gl/glow/gl-core/4.1/gl"
 	glfw "github.com/go-gl/glfw3"
-	//	"github.com/rwesterteiger/vectormath"
-	"fmt"
+
 	"github.com/rwesterteiger/go-gltest/buffers"
 	"github.com/rwesterteiger/go-gltest/geom"
 	"github.com/rwesterteiger/go-gltest/shader"
+	"github.com/rwesterteiger/go-gltest/util"
+	"github.com/rwesterteiger/go-gltest/lights"
+	"github.com/rwesterteiger/go-gltest/post"
+	"github.com/rwesterteiger/go-gltest/scene"
+
 	vmath "github.com/rwesterteiger/vectormath"
+
+	"fmt"
 	"log"
 	"math"
-
-	"github.com/rwesterteiger/go-gltest/lights"
-	// "github.com/rwesterteiger/go-gltest/post"
-	"github.com/rwesterteiger/go-gltest/scene"
 	"time"
 	"runtime"
 )
@@ -50,17 +52,20 @@ void main(void)
 }
 `
 
-func makePlaneVAO() *buffers.VAO {
-	vtxs := buffers.MakeVBOFromVec3s([]vmath.Vector3{{-10, 0, 10}, {10, 0, 10}, {10, 0, -10}, {-10, 0, -10}})
-	normals := buffers.MakeVBOFromVec3s([]vmath.Vector3{{0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}})
+func makePlaneObject() *geom.Object {
+	vtxs    := []vmath.Vector3{{-10, 0, 10}, {10, 0, 10}, {10, 0, -10}, {-10, 0, -10}}
+	normals := []vmath.Vector3{{0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}
 	indices := []uint32{0, 1, 2, 2, 3, 0}
 
 	vao := buffers.MakeVAO(gl.TRIANGLES, 6)
-	vao.AttachVBO(0, vtxs)
-	vao.AttachVBO(1, normals)
+	vao.AttachVBO(0, buffers.MakeVBOFromVec3s(vtxs))
+	vao.AttachVBO(1, buffers.MakeVBOFromVec3s(normals))
 	vao.SetIndexBuffer(indices)
 
-	return vao
+	bbox := util.MakeBBox()
+	bbox.AddPoints(vtxs)
+
+	return geom.MakeObject(vao, bbox, &vmath.Vector4{ 1,1,1,1 } )
 }
 
 func makeQuadShader() (quadShader *shader.Shader) {
@@ -250,7 +255,9 @@ func main() {
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 	glfw.WindowHint(glfw.OpenglForwardCompatible, gl.TRUE)
 	glfw.WindowHint(glfw.OpenglProfile, glfw.OpenglCoreProfile)
-//glfw.OpenWindowHint(glfw.WindowNoResize, 1)
+
+	// glfw.WindowHint(glfw.OpenglDebugContext, gl.TRUE)
+	//glfw.OpenWindowHint(glfw.WindowNoResize, 1)
 	//glfw.SetSwapInterval(0)
 	
 	win, err := glfw.CreateWindow(Width, Height, Title, nil, nil)
@@ -281,57 +288,59 @@ func main() {
 	scene.SetCameraPerspective(60.0/360.0*2*math.Pi, float32(fbWidth)/float32(fbHeight), zNear, zFar)
 
 
-	var blenderToGLXForm vmath.Transform3
-	vmath.T3MakeFromCols(&blenderToGLXForm, &vmath.Vector3{1, 0, 0}, &vmath.Vector3{0, 1, 0}, &vmath.Vector3{0, 0, 1}, &vmath.Vector3{0, 0, 0})
+	//var blenderToGLXForm vmath.Transform3
+	//vmath.T3MakeFromCols(&blenderToGLXForm, &vmath.Vector3{1, 0, 0}, &vmath.Vector3{0, 1, 0}, &vmath.Vector3{0, 0, 1}, &vmath.Vector3{0, 0, 0})
 
-	// var objRotation vmath.Transform3
-	// vmath.T3MakeRotationX(&objRotation, 2.2)
+	var moveUp vmath.Transform3
+	vmath.T3MakeTranslation(&moveUp, &vmath.Vector3{0, 1, 0})
 
-	var objTranslation vmath.Transform3
-	vmath.T3MakeTranslation(&objTranslation, &vmath.Vector3{0, 1.0, 0})
+	var rotate vmath.Transform3
+	vmath.T3MakeRotationX(&rotate, -0.7)
 
-	var modelMatrixMonkey vmath.Matrix4
-	vmath.M4MakeIdentity(&modelMatrixMonkey)
-	// vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &objRotation)
-	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &objTranslation)
-	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &blenderToGLXForm)
 
+	var moveForward vmath.Transform3
+	vmath.T3MakeTranslation(&moveForward,  &vmath.Vector3{0, 0,-3})
+
+	var moveBackward vmath.Transform3
+	vmath.T3MakeTranslation(&moveBackward, &vmath.Vector3{0, 0, 3})
+
+
+	var M vmath.Matrix4
+
+	util.MultiplyTransforms(&M, &moveUp, &rotate)
 	monkey := geom.LoadOBJ("monkey.obj", &vmath.Vector4{1, 1, 1, 1})
-	monkey.SetModelMatrix(&modelMatrixMonkey)
+	monkey.SetModelMatrix(&M)
 	scene.AddObject(monkey)
 
-	var monkeyArrayTrans vmath.Transform3
-	vmath.T3MakeTranslation(&monkeyArrayTrans, &vmath.Vector3{0, 0, -2})
-	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &monkeyArrayTrans)
 
-	monkey = geom.LoadOBJ("monkey.obj", &vmath.Vector4{1, 1, 1, 1})
-	monkey.SetModelMatrix(&modelMatrixMonkey)
+	util.MultiplyTransforms(&M, &moveForward, &moveUp, &rotate)
+	monkey  = geom.LoadOBJ("monkey.obj", &vmath.Vector4{1, 1, 1, 1})
+	monkey.SetModelMatrix(&M)
 	scene.AddObject(monkey)
 
-	vmath.T3MakeTranslation(&monkeyArrayTrans, &vmath.Vector3{0, 0, 2})
-	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &monkeyArrayTrans)
 
-	vmath.M4MulT3(&modelMatrixMonkey, &modelMatrixMonkey, &monkeyArrayTrans)
-	monkey = geom.LoadOBJ("monkey.obj", &vmath.Vector4{1, 1, 1, 1})
-	monkey.SetModelMatrix(&modelMatrixMonkey)
+	util.MultiplyTransforms(&M, &moveBackward, &moveUp, &rotate)
+	monkey  = geom.LoadOBJ("monkey.obj", &vmath.Vector4{1, 1, 1, 1})
+	monkey.SetModelMatrix(&M)
 	scene.AddObject(monkey)
 
-	scene.AddObject(geom.MakeObject(makePlaneVAO(), &vmath.Vector4{1, 1, 1, 1}))
+
+	scene.AddObject(makePlaneObject())
 
 	scene.AddLight(lights.MakeAmbientLight())
 	
 
-	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 3, -2}, &vmath.Point3{0, 0, -2}, &vmath.Vector3{0, 0, -1}, 2, &vmath.Vector3{0.5, 0, 0}))
-	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 3, 0}, &vmath.Point3{0, 0, 0}, &vmath.Vector3{0, 0, -1}, 2, &vmath.Vector3{0, 0.5, 0}))
-	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 3, 2}, &vmath.Point3{0, 0, 2}, &vmath.Vector3{0, 0, -1}, 2, &vmath.Vector3{0, 0, 0.5}))
+	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 4,-3}, &vmath.Point3{0, 0,-3}, &vmath.Vector3{0, 0, -1}, 2.5, &vmath.Vector3{0.5, 0, 0}))
+	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 4, 0}, &vmath.Point3{0, 0, 0}, &vmath.Vector3{0, 0, -1}, 2.5, &vmath.Vector3{0, 0.5, 0}))
+	scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 4, 3}, &vmath.Point3{0, 0, 3}, &vmath.Vector3{0, 0, -1}, 2.5, &vmath.Vector3{0, 0, 0.5}))
 	
 
 	//scene.AddLight(lights.MakeSpotLight(&vmath.Point3{2, 2, 2}, &vmath.Point3{0,0.0,0}, &vmath.Vector3{0,0,-1}, 1.5, &vmath.Vector3{0.5,0,0}))
 	//scene.AddLight(lights.MakeSpotLight(&vmath.Point3{-2,2, 2}, &vmath.Point3{0,0.0,0}, &vmath.Vector3{0,0,-1}, 1.5, &vmath.Vector3{0,0.5,0}))
 	//scene.AddLight(lights.MakeSpotLight(&vmath.Point3{0, 2,-2}, &vmath.Point3{0,0.0,0}, &vmath.Vector3{0,0,-1}, 1.5, &vmath.Vector3{0,0,0.5}))
 
-	//dofFilter := post.MakeDoFFilter(fbWidth, fbHeight, 3.4)
-	//scene.AddPostFilter(dofFilter)
+	dofFilter := post.MakeDoFFilter(fbWidth, fbHeight, 4)
+	scene.AddPostFilter(dofFilter)
 
 	//blurFilter := post.MakeBlurFilter(fbWidth, fbHeight)
 	//scene.AddPostFilter(blurFilter)
@@ -341,10 +350,7 @@ func main() {
 	startTime := time.Now()
 	frameCount := 0
 	for !win.ShouldClose() {
-		if gl.GetError() != gl.NO_ERROR {
-			fmt.Printf("GL error in frame number %v\n", frameCount)
-		}
-
+		util.CheckGL()
 
 		if frameCount%1000 == 0 {
 			thisFrameTime := time.Now()
@@ -411,7 +417,7 @@ func main() {
 
 		*/
 
-		// t = 16.4
+		t = 16.3
 
 		t = t + 0.9 / 360.0 * 2 * math.Pi
 		win.SwapBuffers()

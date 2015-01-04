@@ -1,8 +1,10 @@
 package geom
 import (
 	"github.com/go-gl/glow/gl-core/4.1/gl"
-	"log"
 	"github.com/rwesterteiger/go-gltest/buffers"
+	"github.com/rwesterteiger/go-gltest/util"
+
+	"log"
 	"strings"
 	"strconv"
 	"os"
@@ -149,7 +151,17 @@ func makeVAOFromOBJ(obj *OBJData) (*buffers.VAO) {
 }
 
 func LoadOBJ(path string, diffuseColor *vmath.Vector4) *Object {
-	vao := makeVAOFromOBJ(parseOBJ(path))
-	return MakeObject(vao, diffuseColor)
+	objData := parseOBJ(path)
+
+	bb := util.MakeBBox()
+	for _,v := range objData.Vertices {
+		bb.AddPoint(&v)
+	}
+
+	// fmt.Printf("bbox: %v\n", bb)
+
+
+	vao := makeVAOFromOBJ(objData)
+	return MakeObject(vao, bb, diffuseColor)
 }
 

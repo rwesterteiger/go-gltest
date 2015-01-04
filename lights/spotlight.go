@@ -5,6 +5,7 @@ import (
 	"github.com/rwesterteiger/go-gltest/shader"
 	"github.com/rwesterteiger/go-gltest/buffers"
 	"github.com/rwesterteiger/go-gltest/gbuffer"
+	"github.com/rwesterteiger/go-gltest/util"
 	vmath "github.com/rwesterteiger/vectormath"
 	"math"
 	"github.com/go-gl/glow/gl-core/4.1/gl"
@@ -286,10 +287,6 @@ func (s *SpotLight) EndDepthPass() {
 
 func (s *SpotLight) Render(gbuf *gbuffer.GBuffer, projMat, viewMat *vmath.Matrix4) {
 
-	if gl.GetError() != gl.NO_ERROR {
-			panic("gl error in spotlight begin render")
-	}
-
 	uniforms := &spotLightShaderUniforms{
 		AlbedoTex    : 0,
 		NormalTex    : 1,
@@ -300,25 +297,13 @@ func (s *SpotLight) Render(gbuf *gbuffer.GBuffer, projMat, viewMat *vmath.Matrix
 
 	vmath.M4Inverse(&uniforms.InvP, projMat)
 
-	gl.ActiveTexture(gl.TEXTURE0)
-	gl.BindTexture(gl.TEXTURE_2D, gbuf.GetAlbedoTex())
-
-	gl.ActiveTexture(gl.TEXTURE1)
-	gl.BindTexture(gl.TEXTURE_2D, gbuf.GetNormalTex())
-
-	gl.ActiveTexture(gl.TEXTURE2)
-	gl.BindTexture(gl.TEXTURE_2D, gbuf.GetDepthTex())
-
-	gl.ActiveTexture(gl.TEXTURE3)
-	gl.BindTexture(gl.TEXTURE_2D, s.shadowMap.GetDepthTex())
-
 	var eyeSpacePos vmath.Vector4
 	vmath.V4MakeFromP3(&eyeSpacePos, &s.pos)
 	vmath.M4MulV4(&uniforms.LightPosAndAngle, viewMat, &eyeSpacePos)
 
+	uniforms.LightPosAndAngle.W = s.alpha // opening angle
+
 	vmath.M4Mul(&uniforms.PV, projMat, viewMat)
-
-
 
 	var invV vmath.Matrix4
 	vmath.M4Inverse(&invV, viewMat)
@@ -328,46 +313,49 @@ func (s *SpotLight) Render(gbuf *gbuffer.GBuffer, projMat, viewMat *vmath.Matrix
 	vmath.M4MulV3(&tmp, viewMat, &s.dir) // eye space direction of light
 	vmath.V3MakeFromElems(&uniforms.LightDir, tmp.X, tmp.Y, tmp.Z)
 
-	if gl.GetError() != gl.NO_ERROR {
-			panic("gl error in spotlight end render")
-	}
+
+
+	util.CheckGL()
+
+	util.BindTextures2D(gbuf.GetAlbedoTex(), gbuf.GetNormalTex(), gbuf.GetDepthTex(), s.shadowMap.GetDepthTex())
 	s.shader.Enable()
 	s.shader.SetUniforms(uniforms)
+
+	util.CheckGL()
 
 	//s.fsQuadVAO.Draw()
 	s.coneVAO.Draw()
 	s.shader.Disable()
 
+	util.BindTextures2D(0, 0, 0, 0)
 
-	gl.BindTexture(gl.TEXTURE_2D, 0)
-	gl.ActiveTexture(gl.TEXTURE2)
-	gl.BindTexture(gl.TEXTURE_2D, 0)
-	gl.ActiveTexture(gl.TEXTURE1)
-	gl.BindTexture(gl.TEXTURE_2D, 0)
-	gl.ActiveTexture(gl.TEXTURE0)
-	gl.BindTexture(gl.TEXTURE_2D, 0)
-/*
+	util.CheckGL()
 
-	gl.LineWidth(2.0)
+
+
+	/*
+
+	// debug pass - draw lines to show cone
+
+	gl.LineWidth(4.0)
 	gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
 
-	gl.ActiveTexture(gl.TEXTURE0)
-	gl.BindTexture(gl.TEXTURE_2D, gbuf.GetDepthTex())
-	
-	s.dbgShader.ProgramUniformM4(4, &PV)
-	s.dbgShader.ProgramUniform1i(0, 0)
 
-
+	util.BindTextures2D(gbuf.GetDepthTex())
 	s.dbgShader.Enable()
+	s.dbgShader.SetUniforms(uniforms) // will produce warnings for unused uniforms
+
+	util.CheckGL()
+
 	s.coneVAO.Draw()
 	s.dbgShader.Disable()
 
-	gl.BindTexture(gl.TEXTURE_2D, 0)
+	util.BindTextures2D(0)
+
 	gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
-*/
 
-
-
+	util.CheckGL()
+	*/
 }
 
 

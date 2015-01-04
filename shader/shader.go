@@ -1,14 +1,17 @@
 package shader
 
 import (
-	"C"
-	"unsafe"
-	"fmt"
+
 	"github.com/go-gl/glow/gl-core/4.1/gl"
+	"github.com/rwesterteiger/go-gltest/util"
+
 	vmath "github.com/rwesterteiger/vectormath"
 	"strings"
+	
 	"reflect"
 	"log"
+
+	"fmt"
 )
 
 type Shader struct {
@@ -148,6 +151,7 @@ func (s *Shader) ProgramUniform1i(location int, x int) {
 
 func (s *Shader) SetUniforms(uStruct interface{}) {
 	s.withEnabled(func() {
+		util.CheckGL()
 
 		v := reflect.ValueOf(uStruct).Elem() // deref interface, then pointer
 		// t := reflect.TypeOf(v)
@@ -166,7 +170,8 @@ func (s *Shader) SetUniforms(uStruct interface{}) {
 			loc := int32(s.GetUniformLocation(uniformName))
 
 			if (loc == -1) {
-				log.Fatal(fmt.Sprintf("Shader.SetUniforms(): Unknown uniform \"%v\"!", uniformName))
+				log.Printf("Shader.SetUniforms(): Unknown uniform \"%v\"!", uniformName)
+				continue // skip assigning this uniform
 			}
 		
 			switch x := fieldValue.Interface().(type) {
@@ -183,8 +188,14 @@ func (s *Shader) SetUniforms(uStruct interface{}) {
 			case vmath.Matrix4:
 				s.setM4Uniform(loc, &x)
 			}
+
+			if (gl.GetError() != gl.NO_ERROR) {
+				log.Panicf("GL error in Shader.SetUniforms() after setting uniform %v!", uniformName)
+			}
 		}
 	})
+
+	util.CheckGL()
 }
 
 func (s *Shader) printShaderLog(obj uint32) {
@@ -196,7 +207,8 @@ func (s *Shader) printShaderLog(obj uint32) {
 
 	var result int32
 
-	gl.GetShaderInfoLog(obj, int32(logLength), &result, (*uint8)(unsafe.Pointer(&log[0])))
+	gl.GetShaderInfoLog(obj, int32(logLength), &result, (*uint8)(gl.Ptr(&log[0])))
+		// (*uint8)(unsafe.Pointer(&log[0])))
 
 	if result == 0 {
 		fmt.Println("Unable to retrieve shader info log!")
